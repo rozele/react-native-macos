@@ -54,7 +54,7 @@ std::unique_ptr<facebook::react::JSExecutorFactory> RCTAppSetupJsExecutorFactory
 RCT_EXTERN_C_BEGIN
 
 void RCTAppSetupPrepareApp(UIApplication *application, BOOL turboModuleEnabled);
-UIView *RCTAppSetupDefaultRootView(
+RCTUIView *RCTAppSetupDefaultRootView( // [macOS]
     RCTBridge *bridge,
     NSString *moduleName,
     NSDictionary *initialProperties,

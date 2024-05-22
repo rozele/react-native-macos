@@ -76,8 +76,15 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 }
 #endif
 
+#if !TARGET_OS_OSX // [macOS]
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+#else // [macOS
+- (void)applicationDidFinishLaunching:(NSNotification *)notification
+{
+    NSApplication *application = [notification object];
+    NSDictionary *launchOptions = [notification userInfo];
+#endif // macOS]
   BOOL enableTM = NO;
   BOOL enableBridgeless = NO;
 #if RCT_NEW_ARCH_ENABLED
@@ -87,7 +94,7 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 
   RCTAppSetupPrepareApp(application, enableTM);
 
-  UIView *rootView;
+  RCTPlatformView *rootView; // [macOS]
 
   if (enableBridgeless) {
 #if RCT_NEW_ARCH_ENABLED
@@ -125,6 +132,7 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
     NSDictionary *initProps = [self prepareInitialProps];
     rootView = [self createRootViewWithBridge:self.bridge moduleName:self.moduleName initProps:initProps];
   }
+#if !TARGET_OS_OSX // [macOS]
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
   UIViewController *rootViewController = [self createRootViewController];
   [self setRootView:rootView toRootViewController:rootViewController];
@@ -133,6 +141,21 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
   [self.window makeKeyAndVisible];
 
   return YES;
+#else // [macOS
+  NSRect frame = NSMakeRect(0,0,1024,768);
+  self.window = [[NSWindow alloc] initWithContentRect:NSZeroRect
+											styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskResizable | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable
+											  backing:NSBackingStoreBuffered
+												defer:NO];
+  self.window.title = self.moduleName;
+  self.window.autorecalculatesKeyViewLoop = YES;
+  NSViewController *rootViewController = [NSViewController new];
+  rootViewController.view = rootView;
+  rootView.frame = frame;
+  self.window.contentViewController = rootViewController;
+  [self.window makeKeyAndOrderFront:self];
+  [self.window center];
+#endif // macOS]
 }
 
 - (NSURL *)sourceURLForBridge:(RCTBridge *)bridge
@@ -160,7 +183,7 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
   return [[RCTBridge alloc] initWithDelegate:delegate launchOptions:launchOptions];
 }
 
-- (UIView *)createRootViewWithBridge:(RCTBridge *)bridge
+- (RCTPlatformView *)createRootViewWithBridge:(RCTBridge *)bridge // [macOS]
                           moduleName:(NSString *)moduleName
                            initProps:(NSDictionary *)initProps
 {
@@ -168,19 +191,30 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 #if RCT_NEW_ARCH_ENABLED
   enableFabric = self.fabricEnabled;
 #endif
-  UIView *rootView = RCTAppSetupDefaultRootView(bridge, moduleName, initProps, enableFabric);
+  RCTPlatformView *rootView = RCTAppSetupDefaultRootView(bridge, moduleName, initProps, enableFabric); // [macOS]
 
+#if !TARGET_OS_OSX // [macOS]
   rootView.backgroundColor = [UIColor systemBackgroundColor];
+#else // [macOS
+  rootView.layer.backgroundColor = [[NSColor windowBackgroundColor] CGColor];
+#endif // macOS]
 
   return rootView;
 }
 
+#if !TARGET_OS_OSX // [macOS]
 - (UIViewController *)createRootViewController
 {
   return [UIViewController new];
 }
+#else // [macOS
+- (NSViewController *)createRootViewController
+{
+  return [NSViewController new];
+}
+#endif // macOS]
 
-- (void)setRootView:(UIView *)rootView toRootViewController:(UIViewController *)rootViewController
+- (void)setRootView:(RCTPlatformView *)rootView toRootViewController:(UIViewController *)rootViewController // [macOS]
 {
   rootViewController.view = rootView;
 }
@@ -191,6 +225,7 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 }
 
 #pragma mark - UISceneDelegate
+#if !TARGET_OS_OSX // [macOS]
 - (void)windowScene:(UIWindowScene *)windowScene
     didUpdateCoordinateSpace:(id<UICoordinateSpace>)previousCoordinateSpace
         interfaceOrientation:(UIInterfaceOrientation)previousInterfaceOrientation
@@ -198,6 +233,7 @@ static NSString *const kRNConcurrentRoot = @"concurrentRoot";
 {
   [[NSNotificationCenter defaultCenter] postNotificationName:RCTRootViewFrameDidChangeNotification object:self];
 }
+#endif // [macOS]
 
 #pragma mark - RCTCxxBridgeDelegate
 - (std::unique_ptr<facebook::react::JSExecutorFactory>)jsExecutorFactoryForBridge:(RCTBridge *)bridge

@@ -16,6 +16,7 @@
 #import <React/RCTInvalidating.h>
 #import <React/RCTUIUtils.h>
 #import <React/RCTUtils.h>
+#import "UIView+React.h" // [macOS]
 
 #import "CoreModulesPlugins.h"
 
@@ -25,7 +26,9 @@ using namespace facebook::react;
 @end
 
 @implementation RCTDeviceInfo {
+#if !TARGET_OS_OSX // [macOS]
   UIInterfaceOrientation _currentInterfaceOrientation;
+#endif // [macOS]
   NSDictionary *_currentInterfaceDimensions;
   BOOL _isFullscreen;
   BOOL _invalidated;
@@ -47,6 +50,7 @@ RCT_EXPORT_MODULE()
 
 - (void)initialize
 {
+#if !TARGET_OS_OSX // [macOS]
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(didReceiveNewContentSizeMultiplier)
                                                name:RCTAccessibilityManagerDidUpdateMultiplierNotification
@@ -58,9 +62,11 @@ RCT_EXPORT_MODULE()
                                            selector:@selector(interfaceOrientationDidChange)
                                                name:UIApplicationDidChangeStatusBarOrientationNotification
                                              object:nil];
+#endif // [macOS]
 
   _currentInterfaceDimensions = [self _exportedDimensions];
 
+#if !TARGET_OS_OSX // [macOS]
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(interfaceOrientationDidChange)
                                                name:UIApplicationDidBecomeActiveNotification
@@ -70,7 +76,7 @@ RCT_EXPORT_MODULE()
                                            selector:@selector(interfaceFrameDidChange)
                                                name:RCTUserInterfaceStyleDidChangeNotification
                                              object:nil];
-
+#endif // [macOS]
   [[NSNotificationCenter defaultCenter] addObserver:self
                                            selector:@selector(interfaceFrameDidChange)
                                                name:RCTRootViewFrameDidChangeNotification
@@ -84,6 +90,7 @@ RCT_EXPORT_MODULE()
 
 static BOOL RCTIsIPhoneNotched()
 {
+#if !TARGET_OS_OSX // [macOS]
   static BOOL isIPhoneNotched = NO;
   static dispatch_once_t onceToken;
 
@@ -95,12 +102,24 @@ static BOOL RCTIsIPhoneNotched()
   });
 
   return isIPhoneNotched;
+#else // [macOS
+  return NO;
+#endif // macOS]
 }
 
-static NSDictionary *RCTExportedDimensions(CGFloat fontScale)
+
+#if !TARGET_OS_OSX // [macOS]
+NSDictionary *RCTExportedDimensions(CGFloat fontScale)
+#else // [macOS
+static NSDictionary *RCTExportedDimensions(RCTPlatformView *rootView)
+#endif // macOS]
 {
   RCTAssertMainQueue();
+#if !TARGET_OS_OSX // [macOS]
   RCTDimensions dimensions = RCTGetDimensions(fontScale);
+#else // [macOS
+  RCTDimensions dimensions = RCTGetDimensions(rootView);
+#endif // macOS]
   __typeof(dimensions.window) window = dimensions.window;
   NSDictionary<NSString *, NSNumber *> *dimsWindow = @{
     @"width" : @(window.width),
@@ -126,7 +145,12 @@ static NSDictionary *RCTExportedDimensions(CGFloat fontScale)
       (RCTAccessibilityManager *)[_moduleRegistry moduleForName:"AccessibilityManager"];
   RCTAssert(accessibilityManager, @"Failed to get exported dimensions: AccessibilityManager is nil");
   CGFloat fontScale = accessibilityManager ? accessibilityManager.multiplier : 1.0;
+#if !TARGET_OS_OSX // [macOS]
   return RCTExportedDimensions(fontScale);
+#else // [macOS
+  // TODO: Saad - get root view here
+  return RCTExportedDimensions(nil);
+#endif // macOS]
 }
 
 - (NSDictionary<NSString *, id> *)constantsToExport
@@ -165,6 +189,8 @@ static NSDictionary *RCTExportedDimensions(CGFloat fontScale)
 #pragma clang diagnostic pop
   });
 }
+
+#if !TARGET_OS_OSX // [macOS]
 
 - (void)interfaceOrientationDidChange
 {
@@ -206,6 +232,7 @@ static NSDictionary *RCTExportedDimensions(CGFloat fontScale)
 #pragma clang diagnostic pop
   }
 }
+#endif // [macOS]
 
 - (void)interfaceFrameDidChange
 {

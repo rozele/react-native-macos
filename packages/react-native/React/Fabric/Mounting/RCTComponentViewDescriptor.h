@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#import <UIKit/UIKit.h>
+#import <React/RCTUIKit.h> // [macOS]
 
 #import <React/RCTComponentViewProtocol.h>
 
@@ -21,8 +21,7 @@ class RCTComponentViewDescriptor final {
   /*
    * Associated (and owned) native view instance.
    */
-  __strong UIView<RCTComponentViewProtocol> *view = nil;
-
+  __strong RCTUIView<RCTComponentViewProtocol> *view = nil; // [macOS]
   /*
    * Indicates a requirement to call on the view methods from
    * `RCTMountingTransactionObserving` protocol.

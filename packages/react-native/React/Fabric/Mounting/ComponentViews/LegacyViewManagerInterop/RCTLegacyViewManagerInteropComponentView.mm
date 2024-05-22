@@ -22,7 +22,7 @@ static NSString *const kRCTLegacyInteropChildIndexKey = @"index";
 
 @implementation RCTLegacyViewManagerInteropComponentView {
   NSMutableArray<NSDictionary *> *_viewsToBeMounted;
-  NSMutableArray<UIView *> *_viewsToBeUnmounted;
+  NSMutableArray<RCTUIView *> *_viewsToBeUnmounted; // [macOS]
   RCTLegacyViewManagerInteropCoordinatorAdapter *_adapter;
   LegacyViewManagerInteropShadowNode::ConcreteState::Shared _state;
   BOOL _hasInvokedForwardingWarning;
@@ -41,9 +41,9 @@ static NSString *const kRCTLegacyInteropChildIndexKey = @"index";
   return self;
 }
 
-- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event
+- (RCTUIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event // [macOS]
 {
-  UIView *result = [super hitTest:point withEvent:event];
+  RCTUIView *result = (RCTUIView *)[super hitTest:point withEvent:event]; // [macOS]
 
   if (result == _adapter.paperView) {
     return self;
@@ -149,7 +149,7 @@ static NSString *const kRCTLegacyInteropChildIndexKey = @"index";
   [super prepareForRecycle];
 }
 
-- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
+- (void)mountChildComponentView:(RCTUIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index // [macOS]
 {
   [_viewsToBeMounted addObject:@{
     kRCTLegacyInteropChildIndexKey : [NSNumber numberWithInteger:index],
@@ -157,7 +157,7 @@ static NSString *const kRCTLegacyInteropChildIndexKey = @"index";
   }];
 }
 
-- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
+- (void)unmountChildComponentView:(RCTUIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index // [macOS]
 {
   if (_adapter) {
     [_adapter.paperView removeReactSubview:childComponentView];
@@ -197,9 +197,9 @@ static NSString *const kRCTLegacyInteropChildIndexKey = @"index";
 
   for (NSDictionary *mountInstruction in _viewsToBeMounted) {
     NSNumber *index = mountInstruction[kRCTLegacyInteropChildIndexKey];
-    UIView *childView = mountInstruction[kRCTLegacyInteropChildComponentKey];
+    RCTUIView *childView = mountInstruction[kRCTLegacyInteropChildComponentKey]; // [macOS]
     if ([childView isKindOfClass:[RCTLegacyViewManagerInteropComponentView class]]) {
-      UIView *target = ((RCTLegacyViewManagerInteropComponentView *)childView).contentView;
+      RCTUIView *target = ((RCTLegacyViewManagerInteropComponentView *)childView).contentView; // [macOS]
       [_adapter.paperView insertReactSubview:target atIndex:index.integerValue];
     } else {
       [_adapter.paperView insertReactSubview:childView atIndex:index.integerValue];
@@ -208,7 +208,7 @@ static NSString *const kRCTLegacyInteropChildIndexKey = @"index";
 
   [_viewsToBeMounted removeAllObjects];
 
-  for (UIView *view in _viewsToBeUnmounted) {
+  for (RCTUIView *view in _viewsToBeUnmounted) { // [macOS]
     [_adapter.paperView removeReactSubview:view];
   }
 
