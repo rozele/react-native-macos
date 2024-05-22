@@ -8,6 +8,7 @@
 #import "RCTBridge.h"
 #import "RCTBridge+Inspector.h"
 #import "RCTBridge+Private.h"
+#import "RCTDevSettings.h" // [macOS]
 
 #import <objc/runtime.h>
 

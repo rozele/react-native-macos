@@ -11,7 +11,9 @@ extern NSString *const RCTRemoteNotificationReceived;
 
 @interface RCTPushNotificationManager : RCTEventEmitter
 
+#if !TARGET_OS_OSX // [macOS]
 typedef void (^RCTRemoteNotificationCallback)(UIBackgroundFetchResult result);
+#endif // [macOS]
 
 + (void)didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken;
 + (void)didFailToRegisterForRemoteNotificationsWithError:(NSError *)error;

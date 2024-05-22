@@ -21,5 +21,5 @@ typedef void (^RCTBridgelessBundleURLSetter)(NSURL *bundleURL);
                            andSetter:(RCTBridgelessBundleURLSetter)setter
                     andDefaultGetter:(RCTBridgelessBundleURLGetter)defaultGetter;
 - (void)resetBundleURL;
-@property NSURL *bundleURL;
+@property (strong) NSURL *bundleURL; // [macOS]
 @end

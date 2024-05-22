@@ -29,7 +29,11 @@ using namespace facebook::react;
 
 @implementation RCTTextInputComponentView {
   TextInputShadowNode::ConcreteState::Shared _state;
-  UIView<RCTBackedTextInputViewProtocol> *_backedTextInputView;
+#if !TARGET_OS_OSX // [macOS]
+  RCTUIView<RCTBackedTextInputViewProtocol> *_backedTextInputView;
+#else // [macOS
+  RCTPlatformView<RCTBackedTextInputViewProtocol> *_backedTextInputView;
+#endif // macOS]
   NSUInteger _mostRecentEventCount;
   NSAttributedString *_lastStringStateWasUpdatedWith;
 
@@ -83,7 +87,9 @@ using namespace facebook::react;
   if (self.window && !_didMoveToWindow) {
     const auto &props = static_cast<const TextInputProps &>(*_props);
     if (props.autoFocus) {
+#if !TARGET_OS_OSX // [macOS]
       [_backedTextInputView becomeFirstResponder];
+#endif // [macOS]
     }
     _didMoveToWindow = YES;
   }
@@ -114,6 +120,8 @@ using namespace facebook::react;
     [self _setMultiline:newTextInputProps.traits.multiline];
   }
 
+
+#if !TARGET_OS_OSX // [macOS]
   if (newTextInputProps.traits.autocapitalizationType != oldTextInputProps.traits.autocapitalizationType) {
     _backedTextInputView.autocapitalizationType =
         RCTUITextAutocapitalizationTypeFromAutocapitalizationType(newTextInputProps.traits.autocapitalizationType);
@@ -123,6 +131,7 @@ using namespace facebook::react;
     _backedTextInputView.autocorrectionType =
         RCTUITextAutocorrectionTypeFromOptionalBool(newTextInputProps.traits.autoCorrect);
   }
+#endif // [macOS]
 
   if (newTextInputProps.traits.contextMenuHidden != oldTextInputProps.traits.contextMenuHidden) {
     _backedTextInputView.contextMenuHidden = newTextInputProps.traits.contextMenuHidden;
@@ -137,6 +146,7 @@ using namespace facebook::react;
     _backedTextInputView.enablesReturnKeyAutomatically = newTextInputProps.traits.enablesReturnKeyAutomatically;
   }
 
+#if !TARGET_OS_OSX // [macOS]
   if (newTextInputProps.traits.keyboardAppearance != oldTextInputProps.traits.keyboardAppearance) {
     _backedTextInputView.keyboardAppearance =
         RCTUIKeyboardAppearanceFromKeyboardAppearance(newTextInputProps.traits.keyboardAppearance);
@@ -146,20 +156,24 @@ using namespace facebook::react;
     _backedTextInputView.spellCheckingType =
         RCTUITextSpellCheckingTypeFromOptionalBool(newTextInputProps.traits.spellCheck);
   }
+#endif // [macOS]
 
   if (newTextInputProps.traits.caretHidden != oldTextInputProps.traits.caretHidden) {
     _backedTextInputView.caretHidden = newTextInputProps.traits.caretHidden;
   }
 
+#if !TARGET_OS_OSX // [macOS]
   if (newTextInputProps.traits.clearButtonMode != oldTextInputProps.traits.clearButtonMode) {
     _backedTextInputView.clearButtonMode =
         RCTUITextFieldViewModeFromTextInputAccessoryVisibilityMode(newTextInputProps.traits.clearButtonMode);
   }
+#endif // [macOS]
 
   if (newTextInputProps.traits.scrollEnabled != oldTextInputProps.traits.scrollEnabled) {
     _backedTextInputView.scrollEnabled = newTextInputProps.traits.scrollEnabled;
   }
 
+#if !TARGET_OS_OSX // [macOS]
   if (newTextInputProps.traits.secureTextEntry != oldTextInputProps.traits.secureTextEntry) {
     _backedTextInputView.secureTextEntry = newTextInputProps.traits.secureTextEntry;
   }
@@ -184,6 +198,7 @@ using namespace facebook::react;
     _backedTextInputView.smartInsertDeleteType =
         RCTUITextSmartInsertDeleteTypeFromOptionalBool(newTextInputProps.traits.smartInsertDelete);
   }
+#endif // [macOS]
 
   // Traits `blurOnSubmit`, `clearTextOnFocus`, and `selectTextOnFocus` were omitted intentionally here
   // because they are being checked on-demand.
@@ -202,9 +217,11 @@ using namespace facebook::react;
         RCTNSTextAttributesFromTextAttributes(newTextInputProps.getEffectiveTextAttributes(RCTFontSizeMultiplier()));
   }
 
+#if !TARGET_OS_OSX // [macOS]
   if (newTextInputProps.selectionColor != oldTextInputProps.selectionColor) {
     _backedTextInputView.tintColor = RCTUIColorFromSharedColor(newTextInputProps.selectionColor);
   }
+#endif // [macOS]
 
   if (newTextInputProps.inputAccessoryViewID != oldTextInputProps.inputAccessoryViewID) {
     _backedTextInputView.inputAccessoryViewID = RCTNSStringFromString(newTextInputProps.inputAccessoryViewID);
@@ -242,6 +259,9 @@ using namespace facebook::react;
 {
   [super updateLayoutMetrics:layoutMetrics oldLayoutMetrics:oldLayoutMetrics];
 
+#if TARGET_OS_OSX // [macOS
+  _backedTextInputView.pointScaleFactor = layoutMetrics.pointScaleFactor;
+#endif // macOS]
   _backedTextInputView.frame =
       UIEdgeInsetsInsetRect(self.bounds, RCTUIEdgeInsetsFromEdgeInsets(layoutMetrics.borderWidth));
   _backedTextInputView.textContainerInset =
@@ -406,9 +426,57 @@ using namespace facebook::react;
   }
 }
 
+#if TARGET_OS_OSX // [macOS
+- (void)automaticSpellingCorrectionDidChange:(BOOL)enabled {}
+
+
+- (void)continuousSpellCheckingDidChange:(BOOL)enabled {}
+
+
+- (void)grammarCheckingDidChange:(BOOL)enabled {}
+
+
+- (BOOL)hasValidKeyDownOrValidKeyUp:(nonnull NSString *)key {
+  return YES;
+}
+
+- (void)submitOnKeyDownIfNeeded:(nonnull NSEvent *)event {}
+
+- (void)textInputDidCancel {}
+
+- (NSDragOperation)textInputDraggingEntered:(nonnull id<NSDraggingInfo>)draggingInfo {
+  return NSDragOperationNone;
+}
+
+- (void)textInputDraggingExited:(nonnull id<NSDraggingInfo>)draggingInfo {
+  return;
+}
+
+- (BOOL)textInputShouldHandleDeleteBackward:(nonnull id<RCTBackedTextInputViewProtocol>)sender {
+  return YES;
+}
+
+- (BOOL)textInputShouldHandleDeleteForward:(nonnull id<RCTBackedTextInputViewProtocol>)sender {
+  return YES;
+}
+
+- (BOOL)textInputShouldHandleDragOperation:(nonnull id<NSDraggingInfo>)draggingInfo {
+  return YES;
+}
+
+- (BOOL)textInputShouldHandleKeyEvent:(nonnull NSEvent *)event {
+  return YES;
+}
+
+- (BOOL)textInputShouldHandlePaste:(nonnull id<RCTBackedTextInputViewProtocol>)sender {
+  return YES;
+}
+
+#endif // macOS]
+
 #pragma mark - RCTBackedTextInputDelegate (UIScrollViewDelegate)
 
-- (void)scrollViewDidScroll:(UIScrollView *)scrollView
+- (void)scrollViewDidScroll:(RCTUIScrollView *)scrollView // [macOS]
 {
   if (_eventEmitter) {
     static_cast<const TextInputEventEmitter &>(*_eventEmitter).onScroll([self _textInputMetrics]);
@@ -448,6 +516,7 @@ using namespace facebook::react;
     [self _updateState];
   }
 
+#if !TARGET_OS_OSX // [macOS]
   UITextPosition *startPosition = [_backedTextInputView positionFromPosition:_backedTextInputView.beginningOfDocument
                                                                       offset:start];
   UITextPosition *endPosition = [_backedTextInputView positionFromPosition:_backedTextInputView.beginningOfDocument
@@ -457,6 +526,7 @@ using namespace facebook::react;
     UITextRange *range = [_backedTextInputView textRangeFromPosition:startPosition toPosition:endPosition];
     [_backedTextInputView setSelectedTextRange:range notifyDelegate:NO];
   }
+#endif // [macOS]
   _comingFromJS = NO;
 }
 
@@ -464,6 +534,7 @@ using namespace facebook::react;
 
 - (void)setDefaultInputAccessoryView
 {
+#if !TARGET_OS_OSX // [macOS]
   // InputAccessoryView component sets the inputAccessoryView when inputAccessoryViewID exists
   if (_backedTextInputView.inputAccessoryViewID) {
     if (_backedTextInputView.isFirstResponder) {
@@ -489,11 +560,11 @@ using namespace facebook::react;
     UIToolbar *toolbarView = [UIToolbar new];
     [toolbarView sizeToFit];
     UIBarButtonItem *flexibleSpace =
-        [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
+    [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace target:nil action:nil];
     UIBarButtonItem *doneButton =
-        [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone
-                                                      target:self
-                                                      action:@selector(handleInputAccessoryDoneButton)];
+    [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone
+                                                  target:self
+                                                  action:@selector(handleInputAccessoryDoneButton)];
     toolbarView.items = @[ flexibleSpace, doneButton ];
     _backedTextInputView.inputAccessoryView = toolbarView;
   } else {
@@ -503,13 +574,16 @@ using namespace facebook::react;
   if (_backedTextInputView.isFirstResponder) {
     [_backedTextInputView reloadInputViews];
   }
+#endif // [macOS]
 }
 
 - (void)handleInputAccessoryDoneButton
 {
+#if !TARGET_OS_OSX // [macOS]
   if ([self textInputShouldReturn]) {
     [_backedTextInputView endEditing:YES];
   }
+#endif // [macOS]
 }
 
 #pragma mark - Other
@@ -520,11 +594,15 @@ using namespace facebook::react;
       .text = RCTStringFromNSString(_backedTextInputView.attributedText.string),
       .selectionRange = [self _selectionRange],
       .eventCount = static_cast<int>(_mostRecentEventCount),
+#if !TARGET_OS_OSX // [macOS]
       .contentOffset = RCTPointFromCGPoint(_backedTextInputView.contentOffset),
       .contentInset = RCTEdgeInsetsFromUIEdgeInsets(_backedTextInputView.contentInset),
+#endif // [macOS]
       .contentSize = RCTSizeFromCGSize(_backedTextInputView.contentSize),
       .layoutMeasurement = RCTSizeFromCGSize(_backedTextInputView.bounds.size),
+#if !TARGET_OS_OSX // [macOS]
       .zoomScale = _backedTextInputView.zoomScale,
+#endif // [macOS]
   };
 }
 
@@ -544,12 +622,17 @@ using namespace facebook::react;
 
 - (AttributedString::Range)_selectionRange
 {
+#if !TARGET_OS_OSX // [macOS]
   UITextRange *selectedTextRange = _backedTextInputView.selectedTextRange;
   NSInteger start = [_backedTextInputView offsetFromPosition:_backedTextInputView.beginningOfDocument
                                                   toPosition:selectedTextRange.start];
   NSInteger end = [_backedTextInputView offsetFromPosition:_backedTextInputView.beginningOfDocument
                                                 toPosition:selectedTextRange.end];
   return AttributedString::Range{(int)start, (int)(end - start)};
+#else // [macOS
+  // [Fabric] Placeholder till we implement selection in Fabric
+  return AttributedString::Range({0, 1});
+#endif // macOS]
 }
 
 - (void)_restoreTextSelection
@@ -558,11 +641,13 @@ using namespace facebook::react;
   if (!selection.has_value()) {
     return;
   }
+#if !TARGET_OS_OSX // [macOS]
   auto start = [_backedTextInputView positionFromPosition:_backedTextInputView.beginningOfDocument
                                                    offset:selection->start];
   auto end = [_backedTextInputView positionFromPosition:_backedTextInputView.beginningOfDocument offset:selection->end];
   auto range = [_backedTextInputView textRangeFromPosition:start toPosition:end];
   [_backedTextInputView setSelectedTextRange:range notifyDelegate:YES];
+#endif // [macOS]
 }
 
 - (void)_setAttributedString:(NSAttributedString *)attributedString
@@ -570,6 +655,7 @@ using namespace facebook::react;
   if ([self _textOf:attributedString equals:_backedTextInputView.attributedText]) {
     return;
   }
+#if !TARGET_OS_OSX // [macOS]
   UITextRange *selectedRange = _backedTextInputView.selectedTextRange;
   NSInteger oldTextLength = _backedTextInputView.attributedText.string.length;
   _backedTextInputView.attributedText = attributedString;
@@ -590,12 +676,17 @@ using namespace facebook::react;
   }
   [self _restoreTextSelection];
   _lastStringStateWasUpdatedWith = attributedString;
+#endif // [macOS]
 }
 
 - (void)_setMultiline:(BOOL)multiline
 {
   [_backedTextInputView removeFromSuperview];
-  UIView<RCTBackedTextInputViewProtocol> *backedTextInputView = multiline ? [RCTUITextView new] : [RCTUITextField new];
+#if !TARGET_OS_OSX // [macOS]
+  RCTUIView<RCTBackedTextInputViewProtocol> *backedTextInputView = multiline ? [RCTUITextView new] : [RCTUITextField new];
+#else // [macOS
+  RCTUITextView<RCTBackedTextInputViewProtocol> *backedTextInputView = [RCTUITextView new];
+#endif // macOS]
   backedTextInputView.frame = _backedTextInputView.frame;
   RCTCopyBackedTextInput(_backedTextInputView, backedTextInputView);
   _backedTextInputView = backedTextInputView;
@@ -625,9 +716,18 @@ using namespace facebook::react;
                    }];
 
   BOOL shouldFallbackToBareTextComparison =
-      [_backedTextInputView.textInputMode.primaryLanguage isEqualToString:@"dictation"] ||
-      [_backedTextInputView.textInputMode.primaryLanguage isEqualToString:@"ko-KR"] ||
-      _backedTextInputView.markedTextRange || _backedTextInputView.isSecureTextEntry || fontHasBeenUpdatedBySystem;
+#if !TARGET_OS_OSX // [macOS]
+  [_backedTextInputView.textInputMode.primaryLanguage isEqualToString:@"dictation"] ||
+  [_backedTextInputView.textInputMode.primaryLanguage isEqualToString:@"ko-KR"] ||
+  _backedTextInputView.markedTextRange ||
+  _backedTextInputView.isSecureTextEntry ||
+#else // [macOS
+  // There are multiple Korean input sources (2-Set, 3-Set, etc). Check substring instead instead
+  [[[_backedTextInputView inputContext] selectedKeyboardInputSource] containsString:@"com.apple.inputmethod.Korean"] ||
+  [_backedTextInputView hasMarkedText] ||
+  [_backedTextInputView isKindOfClass:[NSSecureTextField class]] ||
+#endif // macOS]
+  fontHasBeenUpdatedBySystem;
 
   if (shouldFallbackToBareTextComparison) {
     return ([newText.string isEqualToString:oldText.string]);

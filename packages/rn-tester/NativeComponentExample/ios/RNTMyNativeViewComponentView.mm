@@ -21,7 +21,7 @@ using namespace facebook::react;
 @end
 
 @implementation RNTMyNativeViewComponentView {
-  UIView *_view;
+  RCTUIView *_view; // [macOS]
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
@@ -43,8 +43,8 @@ using namespace facebook::react;
     static const auto defaultProps = std::make_shared<const RNTMyNativeViewProps>();
     _props = defaultProps;
 
-    _view = [[UIView alloc] init];
-    _view.backgroundColor = [UIColor redColor];
+    _view = [[RCTUIView alloc] init]; // [macOS]
+    _view.backgroundColor = [RCTUIColor redColor]; // [macOS]
 
     self.contentView = _view;
   }
@@ -95,7 +95,7 @@ using namespace facebook::react;
   [super updateProps:props oldProps:oldProps];
 }
 
-- (void)onChange:(UIView *)sender
+- (void)onChange:(RCTUIView *)sender // [macOS]
 {
   // No-op
   //  std::dynamic_pointer_cast<const ViewEventEmitter>(_eventEmitter)

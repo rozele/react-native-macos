@@ -49,7 +49,12 @@ typedef NS_ENUM(unsigned int, meta_prop_t) {
   static dispatch_once_t onceToken;
   dispatch_once(&onceToken, ^{
     yogaConfig = YGConfigNew();
-    YGConfigSetPointScaleFactor(yogaConfig, RCTScreenScale());
+#if !TARGET_OS_OSX // [macOS]
+    float pixelsInPoint = RCTScreenScale();
+#else // [macOS
+    float pixelsInPoint = 1; // Use 1x alignment for macOS until we can use backing resolution
+#endif // macOS]
+    YGConfigSetPointScaleFactor(yogaConfig, pixelsInPoint);
     YGConfigSetErrata(yogaConfig, YGErrataAll);
   });
   return yogaConfig;
@@ -197,6 +202,11 @@ static void RCTProcessMetaPropsBorder(const YGValue metaProps[META_PROP_COUNT], 
 
     _yogaNode = YGNodeNewWithConfig([[self class] yogaConfig]);
     YGNodeSetContext(_yogaNode, (__bridge void *)self);
+
+#if TARGET_OS_OSX // [macOS
+    // RCTUIManager will fix the scale if we're on a Retina display
+    _scale = 1.0;
+#endif // macOS]
   }
   return self;
 }

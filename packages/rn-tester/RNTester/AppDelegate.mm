@@ -24,23 +24,35 @@
 #import <RNTMyNativeViewComponentView.h>
 #endif
 
-static NSString *kBundlePath = @"js/RNTesterApp.ios";
+#if TARGET_OS_OSX // [macOS]
+NSString *kBundlePath = @"js/RNTesterApp.ios";
+#else // [macOS
+NSString *kBundlePath = @"js/RNTesterApp.macos";
+#endif // macOS]
 
 @interface AppDelegate () <UNUserNotificationCenterDelegate>
 @end
 
 @implementation AppDelegate
 
+#if !TARGET_OS_OSX // [macOS]
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+#else // [macOS
+- (void)applicationDidFinishLaunching:(NSNotification *)notification
+#endif // macOS]
 {
   self.moduleName = @"RNTesterApp";
   // You can add your custom initial props in the dictionary below.
   // They will be passed down to the ViewController used by React Native.
   self.initialProps = [self prepareInitialProps];
 
+#if !TARGET_OS_OSX // [macOS]
   [[UNUserNotificationCenter currentNotificationCenter] setDelegate:self];
 
   return [super application:application didFinishLaunchingWithOptions:launchOptions];
+#else // [macOS
+  [super applicationDidFinishLaunching:notification];
+#endif // macOS]
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application
@@ -65,12 +77,14 @@ static NSString *kBundlePath = @"js/RNTesterApp.ios";
   return [[RCTBundleURLProvider sharedSettings] jsBundleURLForBundleRoot:kBundlePath];
 }
 
+#if !TARGET_OS_OSX // [macOS]
 - (BOOL)application:(UIApplication *)app
             openURL:(NSURL *)url
             options:(NSDictionary<UIApplicationOpenURLOptionsKey, id> *)options
 {
   return [RCTLinkingManager application:app openURL:url options:options];
 }
+#endif // [macOS]
 
 - (void)loadSourceForBridge:(RCTBridge *)bridge
                  onProgress:(RCTSourceLoadProgressBlock)onProgress
@@ -94,14 +108,14 @@ static NSString *kBundlePath = @"js/RNTesterApp.ios";
 }
 
 // Required for the remoteNotificationsRegistered event.
-- (void)application:(__unused UIApplication *)application
+- (void)application:(__unused RCTUIApplication *)application
     didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken
 {
   [RCTPushNotificationManager didRegisterForRemoteNotificationsWithDeviceToken:deviceToken];
 }
 
 // Required for the remoteNotificationRegistrationError event.
-- (void)application:(__unused UIApplication *)application
+- (void)application:(__unused RCTUIApplication *)application
     didFailToRegisterForRemoteNotificationsWithError:(NSError *)error
 {
   [RCTPushNotificationManager didFailToRegisterForRemoteNotificationsWithError:error];

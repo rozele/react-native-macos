@@ -22,17 +22,39 @@ using namespace facebook::react;
 
 @interface RCTActionSheetManager () <NativeActionSheetManagerSpec>
 
+#if !TARGET_OS_OSX // [macOS] Unlike iOS, we will only ever have one NSMenu present at a time
 @property (nonatomic, strong) NSMutableArray<UIAlertController *> *alertControllers;
+#endif // [macOS]
 
 @end
 
 @implementation RCTActionSheetManager
+#if TARGET_OS_OSX // [macOS
+{
+  /* Unlike UIAlertAction (which takes a block for it's action), NSMenuItem takes a selector.
+   * That selector no longer has has access to the method argument `callback`, so we must save it
+   * as an instance variable, that we can access in `menuItemDidTap`. We must do this as well for
+   * `failureCallback` and `successCallback`.
+   */
+  NSMapTable *_callbacks;
+  RCTResponseSenderBlock _failureCallback;
+  RCTResponseSenderBlock _successCallback;
+  NSArray<NSSharingService*> *_excludedActivities;
+  NSString *_sharingSubject;
+
+}
+#endif // macOS]
 
 - (instancetype)init
 {
   self = [super init];
   if (self) {
+#if !TARGET_OS_OSX // [macOS]
     _alertControllers = [NSMutableArray new];
+#else // [macOS
+    _callbacks = [NSMapTable new];
+#endif // macOS]
+
   }
   return self;
 }
@@ -46,6 +68,7 @@ RCT_EXPORT_MODULE()
 
 @synthesize viewRegistry_DEPRECATED = _viewRegistry_DEPRECATED;
 
+#if !TARGET_OS_OSX // [macOS]
 - (void)presentViewController:(UIViewController *)alertController
        onParentViewController:(UIViewController *)parentViewController
                 anchorViewTag:(NSNumber *)anchorViewTag
@@ -62,18 +85,45 @@ RCT_EXPORT_MODULE()
   alertController.popoverPresentationController.sourceRect = sourceView.bounds;
   [parentViewController presentViewController:alertController animated:YES completion:nil];
 }
+#else // [macOS
+- (void)presentMenu:(NSMenu *)menu
+      anchorViewTag:(NSNumber *)anchorViewTag
+{
+    NSView *sourceView = nil;
+    if (anchorViewTag) {
+      sourceView = [self.viewRegistry_DEPRECATED viewForReactTag:anchorViewTag];
+    }
+
+    NSPoint location = CGPointZero;
+    if (sourceView != nil) {
+      // Display under the anchorview
+      CGRect bounds = [sourceView bounds];
+
+      CGFloat originX = [sourceView userInterfaceLayoutDirection] == NSUserInterfaceLayoutDirectionRightToLeft ? NSMaxX(bounds) : NSMinX(bounds);
+      location = NSMakePoint(originX, NSMaxY(bounds));
+    } else {
+      // Display at mouse location if no anchorView provided
+      location = [NSEvent mouseLocation];
+    }
+    [menu popUpMenuPositioningItem:menu.itemArray.firstObject atLocation:location inView:sourceView];
+}
+#endif // [macOS]
 
 RCT_EXPORT_METHOD(showActionSheetWithOptions
                   : (JS::NativeActionSheetManager::SpecShowActionSheetWithOptionsOptions &)options callback
                   : (RCTResponseSenderBlock)callback)
 {
+#if !TARGET_OS_OSX // [macOS]
   if (RCTRunningInAppExtension()) {
     RCTLogError(@"Unable to show action sheet from app extension");
     return;
   }
+#endif // [macOS]
 
   NSString *title = options.title();
+#if !TARGET_OS_OSX // [macOS] Unused on macOS
   NSString *message = options.message();
+#endif // [macOS]
   NSArray<NSString *> *buttons = RCTConvertOptionalVecToArray(options.options(), ^id(NSString *element) {
     return element;
   });
@@ -86,6 +136,7 @@ RCT_EXPORT_METHOD(showActionSheetWithOptions
       return @(element);
     });
   }
+#if !TARGET_OS_OSX // [macOS] NSMenu doesn't have an equivalent of destructive buttons
   if (options.destructiveButtonIndices()) {
     destructiveButtonIndices = RCTConvertVecToArray(*options.destructiveButtonIndices(), ^id(double element) {
       return @(element);
@@ -94,7 +145,10 @@ RCT_EXPORT_METHOD(showActionSheetWithOptions
     NSNumber *destructiveButtonIndex = @-1;
     destructiveButtonIndices = @[ destructiveButtonIndex ];
   }
+#endif // [macOS]
+
   NSNumber *anchor = [RCTConvert NSNumber:options.anchor() ? @(*options.anchor()) : nil];
+#if !TARGET_OS_OSX // [macOS]
   UIColor *tintColor = [RCTConvert UIColor:options.tintColor() ? @(*options.tintColor()) : nil];
   UIColor *cancelButtonTintColor =
       [RCTConvert UIColor:options.cancelButtonTintColor() ? @(*options.cancelButtonTintColor()) : nil];
@@ -190,10 +244,14 @@ RCT_EXPORT_METHOD(showActionSheetWithOptions
     [self->_alertControllers addObject:alertController];
     [self presentViewController:alertController onParentViewController:controller anchorViewTag:anchorViewTag];
   });
+#else // [macOS
+  [self presentMenu:menu anchorViewTag:anchorViewTag];
+#endif // macOS]
 }
 
 RCT_EXPORT_METHOD(dismissActionSheet)
 {
+#if !TARGET_OS_OSX // [macOS]
   if (_alertControllers.count == 0) {
     RCTLogWarn(@"Unable to dismiss action sheet");
   }
@@ -202,7 +260,8 @@ RCT_EXPORT_METHOD(dismissActionSheet)
   dispatch_async(dispatch_get_main_queue(), ^{
     [alertController dismissViewControllerAnimated:YES completion:nil];
     [self->_alertControllers removeLastObject];
-  });
+  });0
+#endif // [macOS]
 }
 
 RCT_EXPORT_METHOD(showShareActionSheetWithOptions
@@ -210,14 +269,17 @@ RCT_EXPORT_METHOD(showShareActionSheetWithOptions
                   : (RCTResponseSenderBlock)failureCallback successCallback
                   : (RCTResponseSenderBlock)successCallback)
 {
+#if !TARGET_OS_OSX // [macOS]
   if (RCTRunningInAppExtension()) {
     RCTLogError(@"Unable to show action sheet from app extension");
     return;
   }
+#endif // [macOS]
 
   NSMutableArray<id> *items = [NSMutableArray array];
   NSString *message = options.message();
   NSURL *URL = [RCTConvert NSURL:options.url()];
+#if !TARGET_OS_OSX // [macOS]
   NSString *subject = options.subject();
   NSArray *excludedActivityTypes =
       RCTConvertOptionalVecToArray(options.excludedActivityTypes(), ^id(NSString *element) {
@@ -280,7 +342,80 @@ RCT_EXPORT_METHOD(showShareActionSheetWithOptions
 
     [self presentViewController:shareController onParentViewController:controller anchorViewTag:anchorViewTag];
   });
+#else // [macOS
+  NSArray *excludedActivityTypes = RCTConvertOptionalVecToArray(options.excludedActivityTypes(), ^id(NSString *element) { return element; });
+  NSMutableArray<NSSharingService*> *excludedTypes = [NSMutableArray array];
+  for (NSString *excludeActivityType in excludedActivityTypes) {
+    NSSharingService *sharingService = [NSSharingService sharingServiceNamed:excludeActivityType];
+    if (sharingService) {
+      [excludedTypes addObject:sharingService];
+    }
+  }
+  _excludedActivities = excludedTypes.copy;
+  _sharingSubject = options.subject();
+  _failureCallback = failureCallback;
+  _successCallback = successCallback;
+  RCTPlatformView *sourceView = nil;
+  NSNumber *anchorViewTag = [RCTConvert NSNumber:options.anchor() ? @(*options.anchor()) : nil];
+  if (anchorViewTag) {
+    sourceView = [self.viewRegistry_DEPRECATED viewForReactTag:anchorViewTag];
+  }
+  NSView *contentView = sourceView ?: NSApp.keyWindow.contentView;
+  NSSharingServicePicker *picker = [[NSSharingServicePicker alloc] initWithItems:items];
+  picker.delegate = self;
+  [picker showRelativeToRect:contentView.bounds ofView:contentView preferredEdge:NSRectEdgeMinX];
+#endif // macOS]
 }
+
+#if TARGET_OS_OSX // [macOS
+
+#pragma mark - NSSharingServicePickerDelegate methods
+
+- (void)menuItemDidTap:(NSMenuItem*)menuItem
+{
+  NSMenu *menu = menuItem.menu;
+  NSInteger buttonIndex = menuItem.tag;
+  RCTResponseSenderBlock callback = [_callbacks objectForKey:menu];
+  if (callback) {
+    callback(@[@(buttonIndex)]);
+    [_callbacks removeObjectForKey:menu];
+  } else {
+    RCTLogWarn(@"No callback registered for menu: %@", menu.title);
+  }
+}
+
+- (void)sharingServicePicker:(NSSharingServicePicker *)sharingServicePicker didChooseSharingService:(NSSharingService *)service
+{
+  if (service){
+    service.subject = _sharingSubject;
+  }
+}
+
+- (void)sharingService:(NSSharingService *)sharingService didFailToShareItems:(NSArray *)items error:(NSError *)error
+{
+  _failureCallback(@[RCTJSErrorFromNSError(error)]);
+}
+
+- (void)sharingService:(NSSharingService *)sharingService didShareItems:(NSArray *)items
+{
+  NSRange range = [sharingService.description rangeOfString:@"\\[com.apple.share.*\\]" options:NSRegularExpressionSearch];
+  if (range.location == NSNotFound) {
+    _successCallback(@[@NO, (id)kCFNull]);
+    return;
+  }
+  range.location++; // Start after [
+  range.length -= 2; // Remove both [ and ]
+  NSString *activityType = [sharingService.description substringWithRange:range];
+  _successCallback(@[@YES, RCTNullIfNil(activityType)]);
+}
+
+- (NSArray<NSSharingService *> *)sharingServicePicker:(__unused NSSharingServicePicker *)sharingServicePicker sharingServicesForItems:(__unused NSArray *)items proposedSharingServices:(NSArray<NSSharingService *> *)proposedServices
+{
+  return [proposedServices filteredArrayUsingPredicate:[NSPredicate predicateWithBlock:^BOOL(NSSharingService *service, __unused NSDictionary<NSString *,id> * _Nullable bindings) {
+    return ![self->_excludedActivities containsObject:service];
+  }]];
+}
+#endif // macOS]
 
 - (std::shared_ptr<TurboModule>)getTurboModule:(const ObjCTurboModule::InitParams &)params
 {

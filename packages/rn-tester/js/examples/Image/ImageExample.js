@@ -1350,7 +1350,7 @@ exports.examples = [
         />
       );
     },
-    platform: 'ios',
+    platform: ['ios', 'macos'], // [macOS]
   },
   {
     title: 'Base64 image',
@@ -1405,7 +1405,8 @@ exports.examples = [
           <Image
             source={{
               uri: 'ImageInBundle',
-              bundle: 'RNTesterBundle',
+              bundle:
+                'RNTesterBundle',
               width: 100,
               height: 100,
             }}
@@ -1414,7 +1415,8 @@ exports.examples = [
           <Image
             source={{
               uri: 'ImageInAssetCatalog',
-              bundle: 'RNTesterBundle',
+              bundle:
+                'RNTesterBundle',
               width: 100,
               height: 100,
             }}
@@ -1423,7 +1425,7 @@ exports.examples = [
         </View>
       );
     },
-    platform: 'ios',
+    platform: ['ios'],
   },
   {
     title: 'Blur Radius',

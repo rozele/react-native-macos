@@ -25,9 +25,9 @@ RCT_EXPORT_VIEW_PROPERTY(values, NSArray *)
 
 RCT_EXPORT_METHOD(callNativeMethodToChangeBackgroundColor : (nonnull NSNumber *)reactTag color : (NSString *)color)
 {
-  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-    UIView *view = viewRegistry[reactTag];
-    if (!view || ![view isKindOfClass:[UIView class]]) {
+  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTUIView *> *viewRegistry) { // [macOS]
+    RCTUIView *view = viewRegistry[reactTag]; // [macOS]
+    if (!view || ![view isKindOfClass:[RCTPlatformView class]]) { // [macOS]
       RCTLogError(@"Cannot find NativeView with tag #%@", reactTag);
       return;
     }
@@ -36,9 +36,9 @@ RCT_EXPORT_METHOD(callNativeMethodToChangeBackgroundColor : (nonnull NSNumber *)
   }];
 }
 
-- (UIView *)view
+- (RCTUIView *)view // [macOS]
 {
-  return [[UIView alloc] init];
+  return [[RCTUIView alloc] init]; // [macOS]
 }
 
 @end

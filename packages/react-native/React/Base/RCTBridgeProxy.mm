@@ -427,7 +427,7 @@ using namespace facebook;
 /**
  * RCTViewRegistry
  */
-- (UIView *)viewForReactTag:(NSNumber *)reactTag
+- (RCTPlatformView *)viewForReactTag:(NSNumber *)reactTag // [macOS]
 {
   [self logWarning:@"Please migrate to RCTViewRegistry: @synthesize viewRegistry_DEPRECATED = _viewRegistry_DEPRECATED."
                cmd:_cmd];

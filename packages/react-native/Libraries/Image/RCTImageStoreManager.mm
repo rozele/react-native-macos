@@ -12,7 +12,9 @@
 
 #import <FBReactNativeSpec/FBReactNativeSpec.h>
 #import <ImageIO/ImageIO.h>
+#if !TARGET_OS_OSX // [macOS]
 #import <MobileCoreServices/UTType.h>
+#endif // [macOS]
 #import <React/RCTAssert.h>
 #import <React/RCTImageUtils.h>
 #import <React/RCTLog.h>
@@ -255,7 +257,7 @@ RCT_EXPORT_METHOD(addImageFromBase64
   dispatch_sync([self _getAsyncQueue], ^{
     imageData = self->_store[imageTag];
   });
-  return [UIImage imageWithData:imageData];
+  return UIImageWithData(imageData); // [macOS]
 }
 
 - (void)getImageForTag:(NSString *)imageTag withBlock:(void (^)(UIImage *image))block
@@ -265,7 +267,7 @@ RCT_EXPORT_METHOD(addImageFromBase64
     NSData *imageData = self->_store[imageTag];
     dispatch_async(dispatch_get_main_queue(), ^{
       // imageWithData: is not thread-safe, so we can't do this on methodQueue
-      block([UIImage imageWithData:imageData]);
+      block(UIImageWithData(imageData)); // [macOS]
     });
   });
 }

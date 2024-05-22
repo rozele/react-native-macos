@@ -83,6 +83,7 @@ static UNNotification *kInitialNotification = nil;
 
 @implementation RCTConvert (UIBackgroundFetchResult)
 
+#if !TARGET_OS_OSX // [macOS]
 RCT_ENUM_CONVERTER(
     UIBackgroundFetchResult,
     (@{
@@ -92,6 +93,7 @@ RCT_ENUM_CONVERTER(
     }),
     UIBackgroundFetchResultNoData,
     integerValue)
+#endif // [macOS]
 
 @end
 
@@ -316,7 +318,13 @@ RCT_EXPORT_METHOD(onFinishRemoteNotification : (NSString *)notificationId fetchR
  */
 RCT_EXPORT_METHOD(setApplicationIconBadgeNumber : (double)number)
 {
+#if !TARGET_OS_OSX // [macOS]
   RCTSharedApplication().applicationIconBadgeNumber = number;
+#else // [macOS
+  NSDockTile *tile = [NSApp dockTile];
+  tile.showsApplicationBadge = number > 0;
+  tile.badgeLabel = number > 0 ? [NSString stringWithFormat:@"%.0lf", number] : nil;
+#endif // macOS]
 }
 
 /**
@@ -324,7 +332,11 @@ RCT_EXPORT_METHOD(setApplicationIconBadgeNumber : (double)number)
  */
 RCT_EXPORT_METHOD(getApplicationIconBadgeNumber : (RCTResponseSenderBlock)callback)
 {
+#if !TARGET_OS_OSX // [macOS]
   callback(@[ @(RCTSharedApplication().applicationIconBadgeNumber) ]);
+#else // [macOS
+  callback(@[ @([NSApp dockTile].badgeLabel.integerValue) ]);
+#endif // macOS]
 }
 
 RCT_EXPORT_METHOD(requestPermissions
@@ -332,6 +344,7 @@ RCT_EXPORT_METHOD(requestPermissions
                   : (RCTPromiseResolveBlock)resolve reject
                   : (RCTPromiseRejectBlock)reject)
 {
+#if !TARGET_OS_OSX // [macOS]
   if (RCTRunningInAppExtension()) {
     reject(
         kErrorUnableToRequestPermissions,
@@ -339,6 +352,7 @@ RCT_EXPORT_METHOD(requestPermissions
         RCTErrorWithMessage(@"Requesting push notifications is currently unavailable in an app extension"));
     return;
   }
+#endif // [macOS]
 
   // Add a listener to make sure that startObserving has been called
   [self addListener:@"remoteNotificationsRegistered"];
@@ -380,10 +394,12 @@ RCT_EXPORT_METHOD(abandonPermissions)
 
 RCT_EXPORT_METHOD(checkPermissions : (RCTResponseSenderBlock)callback)
 {
+#if !TARGET_OS_OSX // [macOS]
   if (RCTRunningInAppExtension()) {
     callback(@[ RCTSettingsDictForUNNotificationSettings(NO, NO, NO, NO, NO, NO, UNAuthorizationStatusNotDetermined) ]);
     return;
   }
+#endif // [macOS]
 
   [UNUserNotificationCenter.currentNotificationCenter
       getNotificationSettingsWithCompletionHandler:^(UNNotificationSettings *_Nonnull settings) {

@@ -6,7 +6,7 @@
  */
 
 #import <React/RCTComponent.h>
-#import <UIKit/UIKit.h>
+#import <React/RCTUIKit.h>
 #import <string>
 
 NS_ASSUME_NONNULL_BEGIN
@@ -16,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setBackgroundColorWithColorString:(NSString *)colorString;
 - (void)addColorOverlays:(const NSArray *)overlayColors;
 - (void)removeOverlays;
-+ (UIColor *)UIColorFromHexString:(const std::string)hexString;
++ (RCTUIColor *)UIColorFromHexString:(const std::string)hexString;
 
 @end
 

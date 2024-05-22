@@ -20,18 +20,18 @@
 
 using namespace facebook::react;
 
-static UIView<RCTBackedTextInputViewProtocol> *_Nullable RCTFindTextInputWithNativeId(UIView *view, NSString *nativeId)
+static RCTUIView<RCTBackedTextInputViewProtocol> *_Nullable RCTFindTextInputWithNativeId(RCTUIView *view, NSString *nativeId) // [macOS]
 {
   if ([view respondsToSelector:@selector(inputAccessoryViewID)] &&
       [view respondsToSelector:@selector(setInputAccessoryView:)]) {
-    UIView<RCTBackedTextInputViewProtocol> *typed = (UIView<RCTBackedTextInputViewProtocol> *)view;
+    RCTUIView<RCTBackedTextInputViewProtocol> *typed = (RCTUIView<RCTBackedTextInputViewProtocol> *)view; // [macOS]
     if (!nativeId || [typed.inputAccessoryViewID isEqualToString:nativeId]) {
       return typed;
     }
   }
 
-  for (UIView *subview in view.subviews) {
-    UIView<RCTBackedTextInputViewProtocol> *result = RCTFindTextInputWithNativeId(subview, nativeId);
+  for (RCTUIView *subview in view.subviews) { // [macOS]
+    RCTUIView<RCTBackedTextInputViewProtocol> *result = RCTFindTextInputWithNativeId(subview, nativeId); // [macOS]
     if (result) {
       return result;
     }
@@ -44,7 +44,7 @@ static UIView<RCTBackedTextInputViewProtocol> *_Nullable RCTFindTextInputWithNat
   InputAccessoryShadowNode::ConcreteState::Shared _state;
   RCTInputAccessoryContentView *_contentView;
   RCTSurfaceTouchHandler *_touchHandler;
-  UIView<RCTBackedTextInputViewProtocol> __weak *_textInput;
+  RCTUIView<RCTBackedTextInputViewProtocol> __weak *_textInput; // [macOS]
 }
 
 - (instancetype)initWithFrame:(CGRect)frame
@@ -65,8 +65,12 @@ static UIView<RCTBackedTextInputViewProtocol> *_Nullable RCTFindTextInputWithNat
 
   if (self.window && !_textInput) {
     if (self.nativeId) {
+#if !TARGET_OS_OSX // [macOS]
       _textInput = RCTFindTextInputWithNativeId(self.window, self.nativeId);
       _textInput.inputAccessoryView = _contentView;
+#else // [macOS
+      _textInput = RCTFindTextInputWithNativeId(self.window.contentView, self.nativeId);
+#endif // macOS]
     } else {
       _textInput = RCTFindTextInputWithNativeId(_contentView, nil);
     }
@@ -82,7 +86,7 @@ static UIView<RCTBackedTextInputViewProtocol> *_Nullable RCTFindTextInputWithNat
   return true;
 }
 
-- (UIView *)inputAccessoryView
+- (RCTUIView *)inputAccessoryView // [macOS]
 {
   return _contentView;
 }
@@ -94,12 +98,12 @@ static UIView<RCTBackedTextInputViewProtocol> *_Nullable RCTFindTextInputWithNat
   return concreteComponentDescriptorProvider<InputAccessoryComponentDescriptor>();
 }
 
-- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
+- (void)mountChildComponentView:(RCTUIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index // [macOS]
 {
   [_contentView insertSubview:childComponentView atIndex:index];
 }
 
-- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
+- (void)unmountChildComponentView:(RCTUIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index // [macOS]
 {
   [childComponentView removeFromSuperview];
 }

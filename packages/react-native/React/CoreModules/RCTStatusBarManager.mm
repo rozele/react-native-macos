@@ -12,6 +12,7 @@
 #import <React/RCTLog.h>
 #import <React/RCTUtils.h>
 
+#if !TARGET_OS_OSX // [macOS]
 #import <FBReactNativeSpec/FBReactNativeSpec.h>
 
 static NSString *const kStatusBarFrameDidChange = @"statusBarFrameDidChange";
@@ -50,6 +51,8 @@ RCT_ENUM_CONVERTER(
 @interface RCTStatusBarManager () <NativeStatusBarManagerIOSSpec>
 @end
 
+#endif // [macOS]
+
 @implementation RCTStatusBarManager
 
 static BOOL RCTViewControllerBasedStatusBarAppearance()
@@ -76,6 +79,8 @@ RCT_EXPORT_MODULE()
 {
   return @[ kStatusBarFrameDidChange, kStatusBarFrameWillChange ];
 }
+
+#if !TARGET_OS_OSX // [macOS]
 
 - (void)startObserving
 {
@@ -188,6 +193,8 @@ RCT_EXPORT_METHOD(setNetworkActivityIndicatorVisible : (BOOL)visible)
 {
   return std::make_shared<facebook::react::NativeStatusBarManagerIOSSpecJSI>(params);
 }
+
+#endif // [macOS]
 
 @end
 

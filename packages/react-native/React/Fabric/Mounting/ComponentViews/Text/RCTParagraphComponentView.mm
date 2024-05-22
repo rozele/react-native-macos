@@ -8,7 +8,10 @@
 #import "RCTParagraphComponentView.h"
 #import "RCTParagraphComponentAccessibilityProvider.h"
 
+#if !TARGET_OS_OSX // [macOS]
 #import <MobileCoreServices/UTCoreTypes.h>
+#endif // [macOS]
+
 #import <react/renderer/components/text/ParagraphComponentDescriptor.h>
 #import <react/renderer/components/text/ParagraphProps.h>
 #import <react/renderer/components/text/ParagraphState.h>
@@ -34,7 +37,9 @@ using namespace facebook::react;
   ParagraphShadowNode::ConcreteState::Shared _state;
   ParagraphAttributes _paragraphAttributes;
   RCTParagraphComponentAccessibilityProvider *_accessibilityProvider;
+#if !TARGET_OS_OSX // [macOS]
   UILongPressGestureRecognizer *_longPressGestureRecognizer;
+#endif // [macOS]
   CAShapeLayer *_highlightLayer;
 }
 
@@ -43,8 +48,10 @@ using namespace facebook::react;
   if (self = [super initWithFrame:frame]) {
     _props = ParagraphShadowNode::defaultSharedProps();
 
-    self.opaque = NO;
+#if !TARGET_OS_OSX  // [macOS]
     self.contentMode = UIViewContentModeRedraw;
+    self.opaque = NO;
+#endif  // [macOS]
   }
 
   return self;
@@ -93,11 +100,13 @@ using namespace facebook::react;
   _paragraphAttributes = newParagraphProps.paragraphAttributes;
 
   if (newParagraphProps.isSelectable != oldParagraphProps.isSelectable) {
+#if !TARGET_OS_OSX // [macOS]
     if (newParagraphProps.isSelectable) {
       [self enableContextMenu];
     } else {
       [self disableContextMenu];
     }
+#endif // [macOS]
   }
 
   [super updateProps:props oldProps:oldProps];
@@ -167,6 +176,7 @@ using namespace facebook::react;
   return NO;
 }
 
+#if !TARGET_OS_OSX // [macOS]
 - (NSArray *)accessibilityElements
 {
   const auto &paragraphProps = static_cast<const ParagraphProps &>(*_props);
@@ -202,6 +212,7 @@ using namespace facebook::react;
 {
   return [super accessibilityTraits] | UIAccessibilityTraitStaticText;
 }
+#endif // [macOS]
 
 #pragma mark - RCTTouchableComponentViewProtocol
 
@@ -236,6 +247,7 @@ using namespace facebook::react;
 
 #pragma mark - Context Menu
 
+#if !TARGET_OS_OSX // [macOS]
 - (void)enableContextMenu
 {
   _longPressGestureRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self
@@ -276,6 +288,7 @@ using namespace facebook::react;
     [menuController showMenuFromView:self rect:self.bounds];
   }
 }
+#endif // [macOS]
 
 - (BOOL)canBecomeFirstResponder
 {
@@ -291,7 +304,11 @@ using namespace facebook::react;
     return YES;
   }
 
+#if !TARGET_OS_OSX // [macOS]
   return [self.nextResponder canPerformAction:action withSender:sender];
+#else  // [macOS
+  return NO;
+#endif // macOS]
 }
 
 - (void)copy:(id)sender
@@ -310,8 +327,14 @@ using namespace facebook::react;
 
   [item setObject:attributedText.string forKey:(id)kUTTypeUTF8PlainText];
 
+#if !TARGET_OS_OSX // [macOS]
   UIPasteboard *pasteboard = [UIPasteboard generalPasteboard];
   pasteboard.items = @[ item ];
+#else // [macOS
+  NSPasteboard *pasteboard = [NSPasteboard generalPasteboard];
+  [pasteboard clearContents];
+  [pasteboard setData:rtf forType:NSPasteboardTypeRTFD];
+#endif // macOS]
 }
 
 @end

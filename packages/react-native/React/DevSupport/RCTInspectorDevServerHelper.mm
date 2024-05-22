@@ -10,7 +10,7 @@
 #if RCT_DEV || RCT_REMOTE_PROFILE
 
 #import <React/RCTLog.h>
-#import <UIKit/UIKit.h>
+#import <React/RCTUIKit.h> // [macOS]
 
 #import <React/RCTCxxInspectorPackagerConnection.h>
 #import <React/RCTDefines.h>
@@ -96,8 +96,12 @@ static NSString *getInspectorDeviceId()
 
 static NSURL *getInspectorDeviceUrl(NSURL *bundleURL)
 {
+#if !TARGET_OS_OSX // [macOS]
   NSString *escapedDeviceName = [[[UIDevice currentDevice] name]
       stringByAddingPercentEncodingWithAllowedCharacters:NSCharacterSet.URLQueryAllowedCharacterSet];
+#else // [macOS
+  NSString *escapedDeviceName = @"";
+#endif // macOS]
   NSString *escapedAppName = [[[NSBundle mainBundle] bundleIdentifier]
       stringByAddingPercentEncodingWithAllowedCharacters:NSCharacterSet.URLQueryAllowedCharacterSet];
 

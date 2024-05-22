@@ -12,9 +12,14 @@
 
 import type {TextStyleProp, ViewStyleProp} from '../StyleSheet/StyleSheet';
 import type {PressEvent} from '../Types/CoreEventTypes';
+import type {KeyEvent} from '../Types/CoreEventTypes'; // [macOS]
+import type {BlurEvent, FocusEvent} from './TextInput/TextInput'; // [macOS]
 import type {
   AccessibilityActionEvent,
   AccessibilityActionInfo,
+  // [macOS
+  AccessibilityRole,
+  // macOS]
   AccessibilityState,
 } from './View/ViewAccessibility';
 
@@ -125,6 +130,7 @@ type ButtonProps = $ReadOnly<{|
     Text to display for blindness accessibility features.
    */
   accessibilityLabel?: ?string,
+
   /**
    * Alias for accessibilityLabel  https://reactnative.dev/docs/view#accessibilitylabel
    * https://github.com/facebook/react-native/issues/34424
@@ -141,6 +147,55 @@ type ButtonProps = $ReadOnly<{|
     Used to locate this view in end-to-end tests.
    */
   testID?: ?string,
+
+  // [macOS
+  /**
+   * Custom accessibility role -- otherwise we use button
+   */
+  accessibilityRole?: ?AccessibilityRole,
+
+  /**
+   * Accessibility action handlers
+   */
+  onAccessibilityAction?: ?(event: AccessibilityActionEvent) => mixed,
+
+  /**
+   * Handler to be called when the button receives key focus
+   */
+  onBlur?: ?(e: BlurEvent) => void,
+
+  /**
+   * Handler to be called when the button loses key focus
+   */
+  onFocus?: ?(e: FocusEvent) => void,
+
+  /**
+   * Handler to be called when a key down press is detected
+   */
+  onKeyDown?: ?(e: KeyEvent) => void,
+
+  /**
+   * Handler to be called when a key up press is detected
+   */
+  onKeyUp?: ?(e: KeyEvent) => void,
+
+  /*
+   * Array of keys to receive key down events for
+   * For arrow keys, add "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
+   */
+  validKeysDown?: ?Array<string>,
+
+  /*
+   * Array of keys to receive key up events for
+   * For arrow keys, add "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
+   */
+  validKeysUp?: ?Array<string>,
+
+  /*
+   * Specifies the Tooltip for the view
+   */
+  tooltip?: string,
+  // macOS]
 
   /**
    * Accessibility props.
@@ -308,16 +363,24 @@ const Button: React.AbstractComponent<
     nextFocusRight,
     nextFocusUp,
     testID,
+    onFocus, // [macOS
+    onBlur,
+    onKeyDown,
+    onKeyUp,
+    validKeysDown,
+    validKeysUp,
+    tooltip, // macOS]
     accessible,
     accessibilityActions,
     accessibilityHint,
     accessibilityLanguage,
+    accessibilityRole, // [macOS]
     onAccessibilityAction,
   } = props;
   const buttonStyles: Array<ViewStyleProp> = [styles.button];
   const textStyles: Array<TextStyleProp> = [styles.text];
   if (color) {
-    if (Platform.OS === 'ios') {
+    if (Platform.OS === 'ios' || Platform.OS === 'macos' /* [macOS] */) {
       textStyles.push({color: color});
     } else {
       buttonStyles.push({backgroundColor: color});
@@ -366,7 +429,7 @@ const Button: React.AbstractComponent<
       accessibilityLabel={ariaLabel || accessibilityLabel}
       accessibilityHint={accessibilityHint}
       accessibilityLanguage={accessibilityLanguage}
-      accessibilityRole="button"
+      accessibilityRole={accessibilityRole || 'button'} // [macOS]
       accessibilityState={_accessibilityState}
       importantForAccessibility={_importantForAccessibility}
       hasTVPreferredFocus={hasTVPreferredFocus}
@@ -378,6 +441,13 @@ const Button: React.AbstractComponent<
       testID={testID}
       disabled={disabled}
       onPress={onPress}
+      onFocus={onFocus} // [macOS
+      onBlur={onBlur}
+      onKeyDown={onKeyDown}
+      onKeyUp={onKeyUp}
+      validKeysDown={validKeysDown}
+      validKeysUp={validKeysUp}
+      tooltip={tooltip} // macOS]
       touchSoundDisabled={touchSoundDisabled}
       ref={ref}>
       <View style={buttonStyles}>
@@ -400,6 +470,7 @@ const styles = StyleSheet.create({
       backgroundColor: '#2196F3',
       borderRadius: 2,
     },
+    macos: {}, // [macOS]
   }),
   text: {
     textAlign: 'center',
@@ -414,6 +485,11 @@ const styles = StyleSheet.create({
         color: 'white',
         fontWeight: '500',
       },
+      macos: {
+        // [macOS
+        color: '#007AFF',
+        fontSize: 18,
+      }, // macOS]
     }),
   },
   buttonDisabled: Platform.select({
@@ -422,11 +498,17 @@ const styles = StyleSheet.create({
       elevation: 0,
       backgroundColor: '#dfdfdf',
     },
+    macos: {}, // [macOS]
   }),
   textDisabled: Platform.select({
     ios: {
       color: '#cdcdcd',
     },
+    // [macOS
+    macos: {
+      color: '#cdcdcd',
+    },
+    // macOS]
     android: {
       color: '#a1a1a1',
     },

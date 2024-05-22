@@ -11,12 +11,15 @@
 
 @interface RCTAlertController ()
 
+#if !TARGET_OS_OSX // [macOS]
 @property (nonatomic, strong) UIWindow *alertWindow;
+#endif // [macOS]
 
 @end
 
 @implementation RCTAlertController
 
+#if !TARGET_OS_OSX // [macOS]
 - (UIWindow *)alertWindow
 {
   if (_alertWindow == nil) {
@@ -53,5 +56,7 @@
 
   _alertWindow = nil;
 }
+
+#endif // [macOS]
 
 @end

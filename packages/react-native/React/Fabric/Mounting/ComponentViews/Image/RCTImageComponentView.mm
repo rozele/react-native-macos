@@ -141,6 +141,7 @@ using namespace facebook::react;
 
   const auto &imageProps = static_cast<const ImageProps &>(*_props);
 
+#if !TARGET_OS_OSX // [macOS]
   if (imageProps.tintColor) {
     image = [image imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
   }
@@ -153,6 +154,12 @@ using namespace facebook::react;
     image = [image resizableImageWithCapInsets:RCTUIEdgeInsetsFromEdgeInsets(imageProps.capInsets)
                                   resizingMode:UIImageResizingModeStretch];
   }
+#else
+  if (imageProps.resizeMode == ImageResizeMode::Repeat) {
+    image.capInsets = RCTUIEdgeInsetsFromEdgeInsets(imageProps.capInsets);
+    image.resizingMode = NSImageResizingModeTile;
+  }
+#endif // [macOS]
 
   if (imageProps.blurRadius > __FLT_EPSILON__) {
     // Blur on a background thread to avoid blocking interaction.

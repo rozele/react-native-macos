@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#import <UIKit/UIKit.h>
+#import <React/RCTUIKit.h> // [macOS]
 
 #import <React/RCTComponentViewProtocol.h>
 
@@ -14,13 +14,13 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * Default implementation of RCTComponentViewProtocol.
  */
-@interface UIView (ComponentViewProtocol) <RCTComponentViewProtocol>
+@interface RCTUIView (ComponentViewProtocol) <RCTComponentViewProtocol> // [macOS]
 
 + (std::vector<facebook::react::ComponentDescriptorProvider>)supplementalComponentDescriptorProviders;
 
-- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index;
+- (void)mountChildComponentView:(RCTUIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index; // [macOS]
 
-- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index;
+- (void)unmountChildComponentView:(RCTUIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index; // [macOS]
 
 - (void)updateProps:(const facebook::react::Props::Shared &)props
            oldProps:(const facebook::react::Props::Shared &)oldProps;
@@ -41,10 +41,13 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)setIsJSResponder:(BOOL)isJSResponder;
 
+- (NSNumber *)reactTag; // [macOS]
+- (void)setReactTag:(NSNumber *)reactTag; // [macOS]
+
 - (void)setPropKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN:(nullable NSSet<NSString *> *)props;
 - (nullable NSSet<NSString *> *)propKeysManagedByAnimated_DO_NOT_USE_THIS_IS_BROKEN;
 
-- (void)updateClippedSubviewsWithClipRect:(CGRect)clipRect relativeToView:(UIView *)clipView;
+- (void)updateClippedSubviewsWithClipRect:(CGRect)clipRect relativeToView:(RCTUIView *)clipView; // [macOS]
 
 @end
 

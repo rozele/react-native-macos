@@ -8,7 +8,7 @@
 #import "HostPlatformColor.h"
 
 #import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
+#import <React/RCTUIKit.h>
 #import <react/utils/ManagedObjectWrapper.h>
 #import <string>
 
@@ -19,29 +19,30 @@ NS_ASSUME_NONNULL_BEGIN
 namespace facebook::react {
 
 namespace {
-UIColor *_Nullable UIColorFromInt32(int32_t intColor)
+RCTUIColor *_Nullable UIColorFromInt32(int32_t intColor)
 {
   CGFloat a = CGFloat((intColor >> 24) & 0xFF) / 255.0;
   CGFloat r = CGFloat((intColor >> 16) & 0xFF) / 255.0;
   CGFloat g = CGFloat((intColor >> 8) & 0xFF) / 255.0;
   CGFloat b = CGFloat(intColor & 0xFF) / 255.0;
-  return [UIColor colorWithRed:r green:g blue:b alpha:a];
+  return [RCTUIColor colorWithRed:r green:g blue:b alpha:a];
 }
 
-UIColor *_Nullable UIColorFromDynamicColor(const facebook::react::DynamicColor &dynamicColor)
+RCTUIColor *_Nullable UIColorFromDynamicColor(const facebook::react::DynamicColor &dynamicColor)
 {
   int32_t light = dynamicColor.lightColor;
   int32_t dark = dynamicColor.darkColor;
   int32_t highContrastLight = dynamicColor.highContrastLightColor;
   int32_t highContrastDark = dynamicColor.highContrastDarkColor;
 
-  UIColor *lightColor = UIColorFromInt32(light);
-  UIColor *darkColor = UIColorFromInt32(dark);
-  UIColor *highContrastLightColor = UIColorFromInt32(highContrastLight);
-  UIColor *highContrastDarkColor = UIColorFromInt32(highContrastDark);
+  RCTUIColor *lightColor = UIColorFromInt32(light);
+  RCTUIColor *darkColor = UIColorFromInt32(dark);
+  RCTUIColor *highContrastLightColor = UIColorFromInt32(highContrastLight);
+  RCTUIColor *highContrastDarkColor = UIColorFromInt32(highContrastDark);
 
+#if !TARGET_OS_OSX // [macOS]
   if (lightColor != nil && darkColor != nil) {
-    UIColor *color = [UIColor colorWithDynamicProvider:^UIColor *_Nonnull(UITraitCollection *_Nonnull collection) {
+    RCTUIColor *color = [UIColor colorWithDynamicProvider:^UIColor *_Nonnull(UITraitCollection *_Nonnull collection) {
       if (collection.userInterfaceStyle == UIUserInterfaceStyleDark) {
         if (collection.accessibilityContrast == UIAccessibilityContrastHigh && highContrastDarkColor != nil) {
           return highContrastDarkColor;
@@ -60,6 +61,7 @@ UIColor *_Nullable UIColorFromDynamicColor(const facebook::react::DynamicColor &
   } else {
     return nil;
   }
+#endif
 
   return nil;
 }

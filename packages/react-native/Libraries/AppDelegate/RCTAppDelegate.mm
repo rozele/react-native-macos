@@ -37,8 +37,16 @@
 
 @implementation RCTAppDelegate
 
+#if !TARGET_OS_OSX // [macOS]
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+  [self _setUpFeatureFlags];
+#else // [macOS
+- (void)applicationDidFinishLaunching:(NSNotification *)notification
+{
+    NSApplication *application = [notification object];
+    NSDictionary *launchOptions = [notification userInfo];
+#endif // macOS]
   [self _setUpFeatureFlags];
 
   RCTSetNewArchEnabled([self newArchEnabled]);
@@ -47,7 +55,7 @@
 
   self.rootViewFactory = [self createRCTRootViewFactory];
 
-  UIView *rootView = [self.rootViewFactory viewWithModuleName:self.moduleName
+  RCTPlatformView *rootView = [self.rootViewFactory viewWithModuleName:self.moduleName // [macOS]
                                             initialProperties:self.initialProps
                                                 launchOptions:launchOptions];
 
@@ -56,6 +64,7 @@
   }
   [self customizeRootView:(RCTRootView *)rootView];
 
+#if !TARGET_OS_OSX // [macOS]
   self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
   UIViewController *rootViewController = [self createRootViewController];
   [self setRootView:rootView toRootViewController:rootViewController];
@@ -64,6 +73,21 @@
   [self.window makeKeyAndVisible];
 
   return YES;
+#else // [macOS
+  NSRect frame = NSMakeRect(0,0,1024,768);
+  self.window = [[NSWindow alloc] initWithContentRect:NSZeroRect
+											styleMask:NSWindowStyleMaskTitled | NSWindowStyleMaskResizable | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable
+											  backing:NSBackingStoreBuffered
+												defer:NO];
+  self.window.title = self.moduleName;
+  self.window.autorecalculatesKeyViewLoop = YES;
+  NSViewController *rootViewController = [NSViewController new];
+  rootViewController.view = rootView;
+  rootView.frame = frame;
+  self.window.contentViewController = rootViewController;
+  [self.window makeKeyAndOrderFront:self];
+  [self.window center];
+#endif // macOS]
 }
 
 - (void)applicationDidEnterBackground:(UIApplication *)application
@@ -83,24 +107,35 @@
   return [[RCTBridge alloc] initWithDelegate:delegate launchOptions:launchOptions];
 }
 
-- (UIView *)createRootViewWithBridge:(RCTBridge *)bridge
+- (RCTPlatformView *)createRootViewWithBridge:(RCTBridge *)bridge // [macOS]
                           moduleName:(NSString *)moduleName
                            initProps:(NSDictionary *)initProps
 {
   BOOL enableFabric = self.fabricEnabled;
-  UIView *rootView = RCTAppSetupDefaultRootView(bridge, moduleName, initProps, enableFabric);
+  RCTPlatformView *rootView = RCTAppSetupDefaultRootView(bridge, moduleName, initProps, enableFabric);
 
+#if !TARGET_OS_OSX // [macOS]
   rootView.backgroundColor = [UIColor systemBackgroundColor];
+#else // [macOS
+  rootView.layer.backgroundColor = [[NSColor windowBackgroundColor] CGColor];
+#endif // macOS]
 
   return rootView;
 }
 
+#if !TARGET_OS_OSX // [macOS]
 - (UIViewController *)createRootViewController
 {
   return [UIViewController new];
 }
+#else // [macOS
+- (NSViewController *)createRootViewController
+{
+  return [NSViewController new];
+}
+#endif // macOS]
 
-- (void)setRootView:(UIView *)rootView toRootViewController:(UIViewController *)rootViewController
+- (void)setRootView:(RCTPlatformView *)rootView toRootViewController:(UIViewController *)rootViewController // [macOS]
 {
   rootViewController.view = rootView;
 }
@@ -112,6 +147,7 @@
 
 #pragma mark - UISceneDelegate
 
+#if !TARGET_OS_OSX // [macOS]
 - (void)windowScene:(UIWindowScene *)windowScene
     didUpdateCoordinateSpace:(id<UICoordinateSpace>)previousCoordinateSpace
         interfaceOrientation:(UIInterfaceOrientation)previousInterfaceOrientation
@@ -119,6 +155,7 @@
 {
   [[NSNotificationCenter defaultCenter] postNotificationName:RCTWindowFrameDidChangeNotification object:self];
 }
+#endif // [macOS]
 
 - (RCTColorSpace)defaultColorSpace
 {

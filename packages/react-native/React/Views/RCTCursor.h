@@ -5,9 +5,35 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#import <Foundation/Foundation.h>
+#import <React/RCTConvert.h>
 
 typedef NS_ENUM(NSInteger, RCTCursor) {
   RCTCursorAuto,
-  RCTCursorPointer,
+  RCTCursorArrow,
+  RCTCursorIBeam,
+  RCTCursorCrosshair,
+  RCTCursorClosedHand,
+  RCTCursorOpenHand,
+  RCTCursorPointingHand,
+  RCTCursorResizeLeft,
+  RCTCursorResizeRight,
+  RCTCursorResizeLeftRight,
+  RCTCursorResizeUp,
+  RCTCursorResizeDown,
+  RCTCursorResizeUpDown,
+  RCTCursorDisappearingItem,
+  RCTCursorIBeamCursorForVerticalLayout,
+  RCTCursorOperationNotAllowed,
+  RCTCursorDragLink,
+  RCTCursorDragCopy,
+  RCTCursorContextualMenu,
 };
+
+@interface RCTConvert (RCTCursor)
+
++ (RCTCursor)RCTCursor:(id)json;
+#if TARGET_OS_OSX // [macOS
++ (NSCursor *)NSCursor:(RCTCursor)rctCursor;
+#endif // macOS]
+
+@end

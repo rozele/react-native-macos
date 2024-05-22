@@ -40,8 +40,8 @@ RCT_CUSTOM_VIEW_PROPERTY(cornerRadius, CGFloat, RNTLegacyView)
 
 RCT_EXPORT_METHOD(changeBackgroundColor : (nonnull NSNumber *)reactTag color : (NSString *)color)
 {
-  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-    if (UIView *view = [RNTMyLegacyNativeViewManager getViewByTag:viewRegistry reactTag:reactTag]) {
+  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTUIView *> *viewRegistry) { // [macOS]
+    if (RCTUIView *view = [RNTMyLegacyNativeViewManager getViewByTag:viewRegistry reactTag:reactTag]) { // [macOS]
       [view setBackgroundColorWithColorString:color];
     }
   }];
@@ -49,8 +49,8 @@ RCT_EXPORT_METHOD(changeBackgroundColor : (nonnull NSNumber *)reactTag color : (
 
 RCT_EXPORT_METHOD(addOverlays : (nonnull NSNumber *)reactTag overlayColors : (NSArray *)overlayColors)
 {
-  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-    if (UIView *view = [RNTMyLegacyNativeViewManager getViewByTag:viewRegistry reactTag:reactTag]) {
+  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTUIView *> *viewRegistry) { // [macOS]
+    if (RCTUIView *view = [RNTMyLegacyNativeViewManager getViewByTag:viewRegistry reactTag:reactTag]) { // [macOS]
       [view addColorOverlays:overlayColors];
     }
   }];
@@ -58,16 +58,16 @@ RCT_EXPORT_METHOD(addOverlays : (nonnull NSNumber *)reactTag overlayColors : (NS
 
 RCT_EXPORT_METHOD(removeOverlays : (nonnull NSNumber *)reactTag)
 {
-  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, UIView *> *viewRegistry) {
-    if (UIView *view = [RNTMyLegacyNativeViewManager getViewByTag:viewRegistry reactTag:reactTag]) {
+  [self.bridge.uiManager addUIBlock:^(RCTUIManager *uiManager, NSDictionary<NSNumber *, RCTUIView *> *viewRegistry) { // [macOS]
+    if (RCTUIView *view = [RNTMyLegacyNativeViewManager getViewByTag:viewRegistry reactTag:reactTag]) { // [macOS]
       [view removeOverlays];
     }
   }];
 }
 
-+ (UIView *)getViewByTag:(NSDictionary<NSNumber *, UIView *> *)viewRegistry reactTag:(nonnull NSNumber *)reactTag
++ (RCTUIView *)getViewByTag:(NSDictionary<NSNumber *, UIView *> *)viewRegistry reactTag:(nonnull NSNumber *)reactTag // [macOS]
 {
-  UIView *view = viewRegistry[reactTag];
+  RCTUIView *view = viewRegistry[reactTag]; // [macOS]
   if (!view || ![view isKindOfClass:[RNTLegacyView class]]) {
     RCTLogError(@"Cannot find RNTLegacyView with tag #%@", reactTag);
     return NULL;
@@ -75,10 +75,11 @@ RCT_EXPORT_METHOD(removeOverlays : (nonnull NSNumber *)reactTag)
   return view;
 }
 
-- (UIView *)view
+- (RCTUIView *)view // [macOS]
+
 {
   RNTLegacyView *view = [[RNTLegacyView alloc] init];
-  view.backgroundColor = UIColor.redColor;
+  view.backgroundColor = RCTUIColor.redColor; // [macOS]
   return view;
 }
 

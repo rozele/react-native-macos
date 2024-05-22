@@ -29,7 +29,7 @@
 
 using namespace facebook::react;
 
-static SurfaceId RCTSurfaceIdForView(UIView *view)
+static SurfaceId RCTSurfaceIdForView(RCTUIView *view) // [macOS]
 {
   do {
     if (RCTIsReactRootView(@(view.tag))) {
@@ -78,7 +78,7 @@ static void RCTPerformMountInstructions(
         auto &newChildViewDescriptor = [registry componentViewDescriptorWithTag:newChildShadowView.tag];
         auto &parentViewDescriptor = [registry componentViewDescriptorWithTag:parentShadowView.tag];
 
-        UIView<RCTComponentViewProtocol> *newChildComponentView = newChildViewDescriptor.view;
+        RCTUIView<RCTComponentViewProtocol> *newChildComponentView = newChildViewDescriptor.view; // [macOS]
 
         RCTAssert(newChildShadowView.props, @"`newChildShadowView.props` must not be null.");
 
@@ -111,7 +111,7 @@ static void RCTPerformMountInstructions(
         auto &oldChildShadowView = mutation.oldChildShadowView;
         auto &newChildShadowView = mutation.newChildShadowView;
         auto &newChildViewDescriptor = [registry componentViewDescriptorWithTag:newChildShadowView.tag];
-        UIView<RCTComponentViewProtocol> *newChildComponentView = newChildViewDescriptor.view;
+        RCTUIView<RCTComponentViewProtocol> *newChildComponentView = newChildViewDescriptor.view; // [macOS]
 
         auto mask = RNComponentViewUpdateMask{};
 
@@ -169,7 +169,7 @@ static void RCTPerformMountInstructions(
   _contextContainer = contextContainer;
 }
 
-- (void)attachSurfaceToView:(UIView *)view surfaceId:(SurfaceId)surfaceId
+- (void)attachSurfaceToView:(RCTUIView *)view surfaceId:(SurfaceId)surfaceId // [macOS]
 {
   RCTAssertMainQueue();
 
@@ -180,7 +180,7 @@ static void RCTPerformMountInstructions(
   [view addSubview:rootViewDescriptor.view];
 }
 
-- (void)detachSurfaceFromView:(UIView *)view surfaceId:(SurfaceId)surfaceId
+- (void)detachSurfaceFromView:(RCTUIView *)view surfaceId:(SurfaceId)surfaceId // [macOS]
 {
   RCTAssertMainQueue();
   RCTComponentViewDescriptor rootViewDescriptor = [_componentViewRegistry componentViewDescriptorWithTag:surfaceId];
@@ -285,7 +285,7 @@ static void RCTPerformMountInstructions(
 {
   ReactTag reactTag = shadowView.tag;
   RCTExecuteOnMainQueue(^{
-    UIView<RCTComponentViewProtocol> *componentView = [self->_componentViewRegistry findComponentViewWithTag:reactTag];
+    RCTUIView<RCTComponentViewProtocol> *componentView = [self->_componentViewRegistry findComponentViewWithTag:reactTag]; // [macOS]
     [componentView setIsJSResponder:isJSResponder];
   });
 }
@@ -295,7 +295,7 @@ static void RCTPerformMountInstructions(
                       componentDescriptor:(const ComponentDescriptor &)componentDescriptor
 {
   RCTAssertMainQueue();
-  UIView<RCTComponentViewProtocol> *componentView = [_componentViewRegistry findComponentViewWithTag:reactTag];
+  RCTUIView<RCTComponentViewProtocol> *componentView = [_componentViewRegistry findComponentViewWithTag:reactTag]; // [macOS]
   SurfaceId surfaceId = RCTSurfaceIdForView(componentView);
   Props::Shared oldProps = [componentView props];
   Props::Shared newProps = componentDescriptor.cloneProps(
@@ -330,15 +330,17 @@ static void RCTPerformMountInstructions(
                                           args:(NSArray *)args
 {
   RCTAssertMainQueue();
-  UIView<RCTComponentViewProtocol> *componentView = [_componentViewRegistry findComponentViewWithTag:reactTag];
+  RCTUIView<RCTComponentViewProtocol> *componentView = [_componentViewRegistry findComponentViewWithTag:reactTag]; // [macOS]
   [componentView handleCommand:commandName args:args];
 }
 
 - (void)synchronouslyDispatchAccessbilityEventOnUIThread:(ReactTag)reactTag eventType:(NSString *)eventType
 {
   if ([@"focus" isEqualToString:eventType]) {
-    UIView<RCTComponentViewProtocol> *componentView = [_componentViewRegistry findComponentViewWithTag:reactTag];
+    RCTUIView<RCTComponentViewProtocol> *componentView = [_componentViewRegistry findComponentViewWithTag:reactTag]; // [macOS]
+#if !TARGET_OS_OSX // [macOS]
     UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, componentView);
+#endif // [macOS]
   }
 }
 

@@ -136,7 +136,7 @@ RCT_EXPORT_MODULE()
 {
   if (!_devMenuItem) {
     __weak __typeof__(self) weakSelf = self;
-    __weak RCTDevSettings *devSettings = [self->_moduleRegistry moduleForName:"DevSettings"];
+    __weak RCTDevSettings *devSettings = [[self bridge] devSettings]; // [macOS]
     if (devSettings.isPerfMonitorShown) {
       [weakSelf show];
     }

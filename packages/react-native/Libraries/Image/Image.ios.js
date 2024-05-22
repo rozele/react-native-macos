@@ -170,6 +170,7 @@ let BaseImage: AbstractImageIOS = React.forwardRef((props, forwardedRef) => {
     selected: ariaSelected ?? props.accessibilityState?.selected,
   };
   const accessibilityLabel = props['aria-label'] ?? props.accessibilityLabel;
+  const accessibilityRole = props.accessibilityRole || 'image';
 
   const actualRef = useWrapRefWithImageAttachedCallbacks(forwardedRef);
 
@@ -179,6 +180,7 @@ let BaseImage: AbstractImageIOS = React.forwardRef((props, forwardedRef) => {
         return (
           <ImageViewNativeComponent
             accessibilityState={_accessibilityState}
+            accessibilityRole={accessibilityRole} // [macOS]
             {...restProps}
             accessible={props.alt !== undefined ? true : props.accessible}
             accessibilityLabel={accessibilityLabel ?? props.alt}

@@ -19,10 +19,16 @@ import type {EdgeInsetsOrSizeProp} from '../../StyleSheet/EdgeInsetsPropType';
 import type {
   BlurEvent,
   FocusEvent,
+  KeyEvent,
   LayoutEvent,
+  MouseEvent,
   PressEvent,
+  // [macOS]
 } from '../../Types/CoreEventTypes';
+// [macOS
+import type {DraggedTypesType} from '../View/DraggedType';
 
+// macOS]
 import View from '../../Components/View/View';
 import {PressabilityDebugView} from '../../Pressability/PressabilityDebug';
 import usePressability from '../../Pressability/usePressability';
@@ -71,13 +77,28 @@ type Props = $ReadOnly<{|
   importantForAccessibility?: ?('auto' | 'yes' | 'no' | 'no-hide-descendants'),
   nativeID?: ?string,
   onAccessibilityAction?: ?(event: AccessibilityActionEvent) => mixed,
-  onBlur?: ?(event: BlurEvent) => mixed,
-  onFocus?: ?(event: FocusEvent) => mixed,
+  onBlur?: ?(event: BlurEvent) => void, // [macOS]
+  onFocus?: ?(event: FocusEvent) => void, // [macOS]
   onLayout?: ?(event: LayoutEvent) => mixed,
   onLongPress?: ?(event: PressEvent) => mixed,
   onPress?: ?(event: PressEvent) => mixed,
   onPressIn?: ?(event: PressEvent) => mixed,
   onPressOut?: ?(event: PressEvent) => mixed,
+  // [macOS
+  acceptsFirstMouse?: ?boolean,
+  enableFocusRing?: ?boolean,
+  tooltip?: ?string,
+  onMouseEnter?: (event: MouseEvent) => void,
+  onMouseLeave?: (event: MouseEvent) => void,
+  onDragEnter?: (event: MouseEvent) => void,
+  onDragLeave?: (event: MouseEvent) => void,
+  onDrop?: (event: MouseEvent) => void,
+  draggedTypes?: ?DraggedTypesType,
+  onKeyDown?: ?(event: KeyEvent) => void,
+  onKeyUp?: ?(event: KeyEvent) => void,
+  validKeysDown?: ?Array<string>,
+  validKeysUp?: ?Array<string>,
+  // macOS]
   pressRetentionOffset?: ?EdgeInsetsOrSizeProp,
   rejectResponderTermination?: ?boolean,
   testID?: ?string,
@@ -106,7 +127,16 @@ const PASSTHROUGH_PROPS = [
   'onAccessibilityAction',
   'onBlur',
   'onFocus',
+  'validKeysDown',
+  'validKeysUp',
   'onLayout',
+  'onMouseEnter', // [macOS
+  'onMouseLeave',
+  'onDragEnter',
+  'onDragLeave',
+  'onDrop',
+  'draggedTypes',
+  'tooltip', // macOS]
   'testID',
 ];
 
@@ -124,6 +154,10 @@ module.exports = function TouchableWithoutFeedback(props: Props): React.Node {
     touchSoundDisabled,
     onBlur: _onBlur,
     onFocus: _onFocus,
+    onKeyDown,
+    onKeyUp,
+    validKeysDown,
+    validKeysUp,
     onLongPress,
     onPress,
     onPressIn,
@@ -146,6 +180,10 @@ module.exports = function TouchableWithoutFeedback(props: Props): React.Node {
       android_disableSound: touchSoundDisabled,
       onBlur: _onBlur,
       onFocus: _onFocus,
+      onKeyDown: onKeyDown,
+      onKeyUp: onKeyUp,
+      validKeysDown: validKeysDown,
+      validKeysUp: validKeysUp,
       onLongPress: onLongPress,
       onPress: onPress,
       onPressIn: onPressIn,
@@ -164,6 +202,10 @@ module.exports = function TouchableWithoutFeedback(props: Props): React.Node {
       touchSoundDisabled,
       _onBlur,
       _onFocus,
+      onKeyDown,
+      onKeyUp,
+      validKeysDown,
+      validKeysUp,
       onLongPress,
       onPress,
       onPressIn,
@@ -195,8 +237,13 @@ module.exports = function TouchableWithoutFeedback(props: Props): React.Node {
 
   // BACKWARD-COMPATIBILITY: Focus and blur events were never supported before
   // adopting `Pressability`, so preserve that behavior.
-  const {onBlur, onFocus, ...eventHandlersWithoutBlurAndFocus} =
-    eventHandlers || {};
+  const {
+    onBlur,
+    onFocus,
+    onMouseEnter, // [macOS]
+    onMouseLeave, // [macOS]
+    ...eventHandlersWithoutBlurAndFocus
+  } = eventHandlers || {};
 
   const elementProps: {[string]: mixed, ...} = {
     ...eventHandlersWithoutBlurAndFocus,
@@ -209,6 +256,13 @@ module.exports = function TouchableWithoutFeedback(props: Props): React.Node {
           }
         : _accessibilityState,
     focusable: props.focusable !== false && props.onPress !== undefined,
+
+    // [macOS
+    acceptsFirstMouse:
+      props.acceptsFirstMouse !== false && !props.disabled,
+    enableFocusRing:
+      props.enableFocusRing !== false && !props.disabled,
+    // macOS]
 
     accessibilityElementsHidden:
       props['aria-hidden'] ?? props.accessibilityElementsHidden,

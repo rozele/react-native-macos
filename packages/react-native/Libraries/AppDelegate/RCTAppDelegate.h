@@ -7,7 +7,7 @@
 
 #import <React/RCTBridgeDelegate.h>
 #import <React/RCTConvert.h>
-#import <UIKit/UIKit.h>
+#import <React/RCTUIKit.h> // [macOS]
 #import "RCTRootViewFactory.h"
 
 @class RCTBridge;
@@ -55,10 +55,13 @@ NS_ASSUME_NONNULL_BEGIN
                                                          (const facebook::react::ObjCTurboModule::InitParams &)params
  *   - (id<RCTTurboModule>)getModuleInstanceFromClass:(Class)moduleClass
  */
+#if !TARGET_OS_OSX // [macOS]
 @interface RCTAppDelegate : UIResponder <UIApplicationDelegate, UISceneDelegate, RCTBridgeDelegate>
-
+#else // [macOS
+@interface RCTAppDelegate : NSResponder <NSApplicationDelegate, RCTBridgeDelegate>
+#endif // macOS]
 /// The window object, used to render the UViewControllers
-@property (nonatomic, strong, nonnull) UIWindow *window;
+@property (nonatomic, strong, nonnull) RCTPlatformWindow *window; // [macOS]
 @property (nonatomic, nullable) RCTBridge *bridge;
 @property (nonatomic, strong, nullable) NSString *moduleName;
 @property (nonatomic, strong, nullable) NSDictionary *initialProps;
@@ -90,7 +93,7 @@ NS_ASSUME_NONNULL_BEGIN
  *
  * @returns: a UIView properly configured with a bridge for React Native.
  */
-- (UIView *)createRootViewWithBridge:(RCTBridge *)bridge
+- (RCTPlatformView *)createRootViewWithBridge:(RCTBridge *)bridge // [macOS]
                           moduleName:(NSString *)moduleName
                            initProps:(NSDictionary *)initProps;
 /**
@@ -129,7 +132,7 @@ NS_ASSUME_NONNULL_BEGIN
  * If you are not using a simple UIViewController, then there could be other methods to use to setup the rootView.
  * For example: UISplitViewController requires `setViewController(_:for:)`
  */
-- (void)setRootView:(UIView *)rootView toRootViewController:(UIViewController *)rootViewController;
+- (void)setRootView:(RCTPlatformView *)rootView toRootViewController:(UIViewController *)rootViewController; // [macOS]
 
 /**
  * The default `RCTColorSpace` for the app. It defaults to `RCTColorSpaceSRGB`.

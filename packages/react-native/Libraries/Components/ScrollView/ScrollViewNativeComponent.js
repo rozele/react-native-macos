@@ -139,7 +139,7 @@ export const __INTERNAL_VIEW_CONFIG: PartialViewConfig =
           directionalLockEnabled: true,
           disableIntervalMomentum: true,
           indicatorStyle: true,
-          inverted: true,
+          isInvertedVirtualizedList: true, // [macOS]
           keyboardDismissMode: true,
           maintainVisibleContentPosition: true,
           maximumZoomScale: true,
@@ -168,6 +168,10 @@ export const __INTERNAL_VIEW_CONFIG: PartialViewConfig =
             onMomentumScrollBegin: true,
             onScrollToTop: true,
             onScroll: true,
+            // [macOS
+            onInvertedDidChange: true,
+            onPreferredScrollerStyleDidChange: true,
+            // macOS]
           }),
         },
       };
