@@ -58,13 +58,15 @@ void RCTAppSetupPrepareApp(UIApplication *application, BOOL turboModuleEnabled)
 #endif
 
 #if DEBUG
+#if !TARGET_OS_OSX // [macOS]
   // Disable idle timer in dev builds to avoid putting application in background and complicating
   // Metro reconnection logic. Users only need this when running the application using our CLI tooling.
   application.idleTimerDisabled = YES;
+#endif // macOS]
 #endif
 }
 
-UIView *
+RCTUIView * // [macOS]
 RCTAppSetupDefaultRootView(RCTBridge *bridge, NSString *moduleName, NSDictionary *initialProperties, BOOL fabricEnabled)
 {
 #if RCT_NEW_ARCH_ENABLED

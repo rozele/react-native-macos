@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#import <UIKit/UIKit.h>
+#import <React/RCTUIKit.h> // [macOS]
 
 #import <React/RCTComponentViewProtocol.h>
 #import <React/RCTConstants.h>
@@ -22,12 +22,12 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  * UIView class for <View> component.
  */
-@interface RCTViewComponentView : UIView <RCTComponentViewProtocol, RCTTouchableComponentViewProtocol> {
+@interface RCTViewComponentView : RCTUIView <RCTComponentViewProtocol, RCTTouchableComponentViewProtocol> {
  @protected
   facebook::react::LayoutMetrics _layoutMetrics;
   facebook::react::SharedViewProps _props;
   facebook::react::SharedViewEventEmitter _eventEmitter;
-}
+} // [macOS]
 
 /**
  * Represents the `UIView` instance that is being automatically attached to
@@ -37,7 +37,7 @@ NS_ASSUME_NONNULL_BEGIN
  * to embed/bridge pure native views as component views.
  * Defaults to `nil`. Assign `nil` to remove view as subview.
  */
-@property (nonatomic, strong, nullable) UIView *contentView;
+@property (nonatomic, strong, nullable) RCTPlatformView *contentView; // [macOS]
 
 /**
  * Provides access to `nativeId` prop of the component.

@@ -12,6 +12,7 @@
 #import <React/RCTLog.h>
 #import <React/RCTUtils.h>
 
+#if !TARGET_OS_OSX // [macOS]
 #import <FBReactNativeSpec/FBReactNativeSpec.h>
 
 @implementation RCTConvert (UIStatusBar)
@@ -47,6 +48,8 @@ RCT_ENUM_CONVERTER(
 @interface RCTStatusBarManager () <NativeStatusBarManagerIOSSpec>
 @end
 
+#endif // [macOS]
+
 @implementation RCTStatusBarManager
 
 static BOOL RCTViewControllerBasedStatusBarAppearance()
@@ -73,6 +76,8 @@ RCT_EXPORT_MODULE()
 {
   return @[ @"statusBarFrameDidChange", @"statusBarFrameWillChange" ];
 }
+
+#if !TARGET_OS_OSX // [macOS]
 
 - (void)startObserving
 {
@@ -185,6 +190,8 @@ RCT_EXPORT_METHOD(setNetworkActivityIndicatorVisible : (BOOL)visible)
 {
   return std::make_shared<facebook::react::NativeStatusBarManagerIOSSpecJSI>(params);
 }
+
+#endif // [macOS]
 
 @end
 

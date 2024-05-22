@@ -19,27 +19,42 @@ static NSAttributedString *RCTSanitizeAttributedString(NSAttributedString *attri
 }
 
 void RCTCopyBackedTextInput(
-    UIView<RCTBackedTextInputViewProtocol> *fromTextInput,
-    UIView<RCTBackedTextInputViewProtocol> *toTextInput)
+#if !TARGET_OS_OSX // [macOS]
+    RCTUIView<RCTBackedTextInputViewProtocol> *fromTextInput,
+    RCTUIView<RCTBackedTextInputViewProtocol> *toTextInput
+#else // [macOS
+    RCTUITextView<RCTBackedTextInputViewProtocol> *fromTextInput,
+    RCTUITextView<RCTBackedTextInputViewProtocol> *toTextInput
+#endif // macOS]
+)
 {
   toTextInput.attributedText = RCTSanitizeAttributedString(fromTextInput.attributedText);
   toTextInput.placeholder = fromTextInput.placeholder;
   toTextInput.placeholderColor = fromTextInput.placeholderColor;
   toTextInput.textContainerInset = fromTextInput.textContainerInset;
+#if !TARGET_OS_OSX // [macOS]
   toTextInput.inputAccessoryView = fromTextInput.inputAccessoryView;
+#endif // [macOS]
   toTextInput.textInputDelegate = fromTextInput.textInputDelegate;
   toTextInput.placeholderColor = fromTextInput.placeholderColor;
   toTextInput.defaultTextAttributes = fromTextInput.defaultTextAttributes;
+#if !TARGET_OS_OSX // [macOS]
   toTextInput.autocapitalizationType = fromTextInput.autocapitalizationType;
   toTextInput.autocorrectionType = fromTextInput.autocorrectionType;
+#endif // [macOS]
   toTextInput.contextMenuHidden = fromTextInput.contextMenuHidden;
   toTextInput.editable = fromTextInput.editable;
+#if !TARGET_OS_OSX // [macOS]
   toTextInput.enablesReturnKeyAutomatically = fromTextInput.enablesReturnKeyAutomatically;
   toTextInput.keyboardAppearance = fromTextInput.keyboardAppearance;
   toTextInput.spellCheckingType = fromTextInput.spellCheckingType;
+#endif // [macOS]
   toTextInput.caretHidden = fromTextInput.caretHidden;
+#if !TARGET_OS_OSX // [macOS]
   toTextInput.clearButtonMode = fromTextInput.clearButtonMode;
+#endif // [macOS]
   toTextInput.scrollEnabled = fromTextInput.scrollEnabled;
+#if !TARGET_OS_OSX // [macOS]
   toTextInput.secureTextEntry = fromTextInput.secureTextEntry;
   toTextInput.keyboardType = fromTextInput.keyboardType;
   toTextInput.textContentType = fromTextInput.textContentType;
@@ -47,8 +62,10 @@ void RCTCopyBackedTextInput(
   toTextInput.passwordRules = fromTextInput.passwordRules;
 
   [toTextInput setSelectedTextRange:fromTextInput.selectedTextRange notifyDelegate:NO];
+#endif // [macOS]
 }
 
+#if !TARGET_OS_OSX // [macOS]
 UITextAutocorrectionType RCTUITextAutocorrectionTypeFromOptionalBool(std::optional<bool> autoCorrect)
 {
   return autoCorrect.has_value() ? (*autoCorrect ? UITextAutocorrectionTypeYes : UITextAutocorrectionTypeNo)
@@ -251,3 +268,4 @@ UITextSmartInsertDeleteType RCTUITextSmartInsertDeleteTypeFromOptionalBool(std::
       ? (*smartInsertDelete ? UITextSmartInsertDeleteTypeYes : UITextSmartInsertDeleteTypeNo)
       : UITextSmartInsertDeleteTypeDefault;
 }
+#endif // [macOS]

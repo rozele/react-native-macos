@@ -105,10 +105,12 @@ static BackgroundExecutor RCTGetBackgroundExecutor()
 
     _scheduler = [self _createScheduler];
 
+#if !TARGET_OS_OSX // [macOS]
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(_applicationWillTerminate)
                                                  name:UIApplicationWillTerminateNotification
                                                object:nil];
+#endif // [macOS]
   }
 
   return self;
@@ -170,10 +172,10 @@ static BackgroundExecutor RCTGetBackgroundExecutor()
                                           initialProperties:initialProperties];
 }
 
-- (UIView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag
+- (RCTUIView *)findComponentViewWithTag_DO_NOT_USE_DEPRECATED:(NSInteger)tag // [macOS]
 {
-  UIView<RCTComponentViewProtocol> *componentView =
-      [_mountingManager.componentViewRegistry findComponentViewWithTag:tag];
+  RCTUIView<RCTComponentViewProtocol> *componentView =
+      [_mountingManager.componentViewRegistry findComponentViewWithTag:tag]; // [macOS]
   return componentView;
 }
 
@@ -185,8 +187,8 @@ static BackgroundExecutor RCTGetBackgroundExecutor()
   }
 
   ReactTag tag = [reactTag integerValue];
-  UIView<RCTComponentViewProtocol> *componentView =
-      [_mountingManager.componentViewRegistry findComponentViewWithTag:tag];
+  RCTUIView<RCTComponentViewProtocol> *componentView =
+      [_mountingManager.componentViewRegistry findComponentViewWithTag:tag]; // [macOS]
   if (componentView == nil) {
     return NO; // This view probably isn't managed by Fabric
   }
@@ -262,6 +264,10 @@ static BackgroundExecutor RCTGetBackgroundExecutor()
 
   if (reactNativeConfig && reactNativeConfig->getBool("react_fabric:enable_cpp_props_iterator_setter_ios")) {
     CoreFeatures::enablePropIteratorSetter = true;
+  }
+
+  if (reactNativeConfig && reactNativeConfig->getBool("rn_convergence:dispatch_pointer_events")) {
+    RCTSetDispatchW3CPointerEvents(YES);
   }
 
   if (reactNativeConfig && reactNativeConfig->getBool("react_fabric:use_native_state")) {

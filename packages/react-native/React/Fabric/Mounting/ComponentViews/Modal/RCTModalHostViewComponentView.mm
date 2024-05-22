@@ -21,6 +21,7 @@
 
 using namespace facebook::react;
 
+#if !TARGET_OS_OSX // [macOS]
 static UIInterfaceOrientationMask supportedOrientationsMask(ModalHostViewSupportedOrientationsMask mask)
 {
   UIInterfaceOrientationMask supportedOrientations = 0;
@@ -93,6 +94,7 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
       : ModalHostViewEventEmitter::OnOrientationChangeOrientation::Landscape;
   return {orientation};
 }
+#endif // [macOS]
 
 @interface RCTModalHostViewComponentView () <RCTFabricModalHostViewControllerDelegate>
 
@@ -104,9 +106,10 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
   BOOL _shouldAnimatePresentation;
   BOOL _shouldPresent;
   BOOL _isPresented;
-  UIView *_modalContentsSnapshot;
+  RCTUIView *_modalContentsSnapshot; // [macOS]
 }
 
+#if !TARGET_OS_OSX // [macOS]
 - (instancetype)initWithFrame:(CGRect)frame
 {
   if (self = [super initWithFrame:frame]) {
@@ -165,7 +168,7 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
     _isPresented = NO;
     // To animate dismissal of view controller, snapshot of
     // view hierarchy needs to be added to the UIViewController.
-    UIView *snapshot = _modalContentsSnapshot;
+    RCTUIView *snapshot = _modalContentsSnapshot; // [macOS]
     [self.viewController.view addSubview:snapshot];
 
     [self dismissViewController:self.viewController
@@ -269,15 +272,16 @@ static ModalHostViewEventEmitter::OnOrientationChange onOrientationChangeStruct(
   _state = std::static_pointer_cast<const ModalHostViewShadowNode::ConcreteState>(state);
 }
 
-- (void)mountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
+- (void)mountChildComponentView:(RCTUIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index // [macOS]
 {
   [self.viewController.view insertSubview:childComponentView atIndex:index];
 }
 
-- (void)unmountChildComponentView:(UIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index
+- (void)unmountChildComponentView:(RCTUIView<RCTComponentViewProtocol> *)childComponentView index:(NSInteger)index // [macOS]
 {
   [childComponentView removeFromSuperview];
 }
+#endif // [macOS]
 
 @end
 
